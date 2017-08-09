@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html id="body">
+
+<head>
+    <script src="resources/socket.io.js"></script> <!-- ver 2.0.3 -->
+    <script src="mobile.js"></script>
+    <style type="text/css">
+    .noSelect {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    #left,
+    #right {
+        width: 100px;
+        height: 50px;
+        outline: 1px black solid;
+        text-align: center;
+        display: inline-block;
+    }
+    </style>
+</head>
+
+<body id="body">
+    MOBILE
+    <div id="left" class="noSelect">left</div>
+    <div id="right" class="noSelect">right</div>
+    <div id="n"></div>
+</body>
+
+</html>
