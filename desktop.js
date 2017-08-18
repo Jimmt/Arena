@@ -17,9 +17,7 @@ function setupSocketListeners() {
     // });
     socket.on("update", function(player) {
         if (player) {
-            if (characters[player.id].x != player.x) {
-                characters[player.id].walk();
-            }
+            characters[player.id].walk(player.x);
             characters[player.id].x = player.x;
             characters[player.id].y = player.y;
         } else {
@@ -52,7 +50,7 @@ function addPlayers(data) {
 }
 
 var game = new Phaser.Game(1200, 675, Phaser.CANVAS, "game", { preload: preload, create: create, update: update, render: render });
-var characterSprites = ["beige", "blue", "green", "pink", "yellow"];
+var characterSprites = ["beige", "blue", "green", "pink"];
 var characters = [];
 var reachedCreate = false;
 var playersToCreate = [];
@@ -60,29 +58,49 @@ var playersToCreate = [];
 var Character = function(game, x, y, spriteName) {
     spriteName = spriteName[0].toUpperCase() + spriteName.substring(1);
     Phaser.Sprite.call(this, game, x, y, "characters", "alien" + spriteName + "_stand");
+    this.anchor.setTo(0.5, 0);
     this.width /= 2;
     this.height /= 2;
-
+    console.log(spriteName);
     this.gun = game.make.sprite(0, 0, "gun");
     this.gun.width *= 2;
     this.gun.height *= 2;
     this.addChild(this.gun);
-    // this.animations.add("stand", ["alienGreen_stand"], 10, true, false);
+    this.animations.add("stand", ["alien" + spriteName + "_stand"], 10, true, false);
     this.animations.add("walk", ["alien" + spriteName + "_walk1", "alien" + spriteName + "_walk2"], 7, true, false);
-    // this.animations.play("walk");
+    this.animations.play("stand");
 }
 
 Character.prototype = Object.create(Phaser.Sprite.prototype);
 Character.prototype.constructor = Character;
 Character.prototype.update = function() {
     if (this.gun) {
-        this.gun.x = 58;
-        this.gun.y = 140;
+        var xOffset = -5;
+        var yOffset = 142;
+        if (this.animations.currentAnim.name == "walk" && this.animations.currentAnim.isPlaying) {
+            xOffset = 0;
+            yOffset = 129;
+        }
+        this.gun.x = xOffset;
+        this.gun.y = yOffset;
     }
 };
-Character.prototype.walk = function() {
+
+var stillFrames = 0;
+Character.prototype.walk = function(x) {
     // console.log(this.animations.currentAnim.frame);
-    this.animations.play("walk");
+    if (x != this.x) {
+        stillFrames = 0;
+        this.animations.play("walk");
+        if ((this.width < 0 && x > this.x) || (this.width > 0 && x < this.x)) {
+            this.width = -this.width;
+        }
+    } else {
+        stillFrames++;
+        if (stillFrames > 2) {
+            this.animations.play("stand");
+        }
+    }
 }
 Character.prototype.destroy = function() {
     Phaser.Sprite.prototype.destroy.call(this);

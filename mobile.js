@@ -5,6 +5,7 @@ var $ = function(id) {
 };
 
 var socket = io.connect("/mobile");
+
 window.onload = function() {
     setupSocketListeners();
     setupListeners();
@@ -12,10 +13,26 @@ window.onload = function() {
 
 var leftId, rightId;
 
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
 function setupSocketListeners() {
     socket.on("playerData", function(player) {
         $("n").innerHTML = player.color;
-        document.cookie = "austin_playerColor=" + player.color;
+        // document.cookie = "austin_id=" + player.clientId;
     });
 }
 

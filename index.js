@@ -24,10 +24,20 @@ app.get("/mobile", function(req, res) {
 var players = [];
 var lastPlayerId = 0;
 var desktopId; // switch to array later
-var colors = ["beige", "blue", "green", "pink", "yellow"];
+var colors = ["beige", "blue", "green", "pink"];
 
 function randomInt(low, high) {
     return Math.floor(Math.random() * (high - low) + low);
+}
+
+function numberOfPlayers() {
+    var count = 0;
+    for (var i = 0; i < players.length; i++) {
+        if (players[i] != undefined) {
+            count++;
+        }
+    }
+    return count;
 }
 
 io.of("/mobile").on("connection", function(socket) {
@@ -48,6 +58,7 @@ io.of("/mobile").on("connection", function(socket) {
     lastPlayerId++;
 
     // io.of("/desktop").to(desktops[0]).emit("allPlayers", getAllPlayers());
+
     socket.emit("playerData", player);
     io.of("/desktop").to(desktopId).emit("newPlayer", player);
 
@@ -75,7 +86,6 @@ io.of("/desktop").on("connection", function(socket) {
     });
 
     socket.on("updateRequest", function(id) {
-        // console.log(players);
         // console.log("searching for id=" + id);
         var desiredPlayer = players[id];
         socket.emit("update", desiredPlayer);
