@@ -68,6 +68,12 @@ function setupSocketListeners() {
     socket.on("remove", function(id) {
         removeCharacter(id);
     });
+    socket.on("deleteBullet", function(bulletId) {
+        removeBullet(bulletId);
+    });
+    socket.on("death", function(id) {
+        removeCharacter(id);
+    });
 }
 
 var game = new Phaser.Game(1200, 675, Phaser.CANVAS, "game", { preload: preload, create: create, update: update, render: render });
@@ -162,7 +168,7 @@ function addBullets(data) {
 
 function addBullet(x, y, id, playerId) {
     var bullet = game.add.sprite(x, y, "characters", "laser");
-    allBullets[id] = bullet;    
+    allBullets[id] = bullet;
     characters[playerId].bullets.push(bullet);
 }
 
@@ -184,8 +190,15 @@ function addCharacter(spriteName, x, y, id, facingRight) {
 }
 
 function removeCharacter(id) {
-    characters[id].destroy();
-    delete characters[id];
+    if (characters[id]) {
+        characters[id].destroy();
+        delete characters[id];
+    }
+}
+
+function removeBullet(id) {
+    allBullets[id].destroy();
+    delete allBullets[id];
 }
 
 function update() {

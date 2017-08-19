@@ -60,7 +60,8 @@ io.of("/mobile").on("connection", function(socket) {
         id: lastPlayerId,
         right: true,
         x: randomInt(100, 400),
-        y: randomInt(100, 400),
+        y: 100,
+        socketId: socket.id,
         color: colors[lastPlayerId % colors.length]
     };
     players[lastPlayerId] = player;
@@ -75,6 +76,7 @@ io.of("/mobile").on("connection", function(socket) {
     socket.on("shoot", function() {
         var player = players[socket.playerData.id];
         var bullet = {
+            player: player,
             playerId: socket.playerData.id,
             bulletId: lastBulletId,
             right: player.right,
@@ -117,18 +119,26 @@ io.of("/desktop").on("connection", function(socket) {
         socket.emit("bulletUpdate", projectiles);
         projectiles.forEach(function(element) {
             element.x += 5 * (element.right ? 1 : -1);
-            // players.forEach(function(player) {
-            //     if (element.x + bulletWidth > player.x - playerWidth / 2 && element.x < player.x + playerWidth / 2) {
-            //         var hitboxY = element.y + playerHeight / 2;
-            //         var hitboxHeight = playerHeight / 2;
-            //         if (element.y + bulletHeight > hitboxY && element.y < hitboxY + hitboxHeight) {
-            //             console.log("collision");
-            //         }
-            //     }
-            // });
+            players.forEach(function(player) {
+                if (element.x + bulletWidth > player.x - playerWidth / 2 && element.x < player.x + playerWidth / 2) {
+                    var hitboxY = player.y + playerHeight / 2;
+                    var hitboxHeight = playerHeight / 2;
+                    if (element.y + bulletHeight > hitboxY && element.y < hitboxY + hitboxHeight) {
+                        playerHit(socket, element, player);
+                    }
+                }
+            });
         });
     });
 });
+
+function playerHit(socket, bullet, player) {
+    delete players[player.id];
+    delete projectiles[bullet.bulletId];
+    socket.emit("death", player.id);
+    socket.emit("deleteBullet", bullet.bulletId);
+    io.of("/mobile").to(bullet.player.socketId).emit("killUpdate");
+}
 
 server.listen(5000, function() {
     console.log("listening on 5000");

@@ -17,7 +17,7 @@ function getCookie(cname) {
     var name = cname + "=";
     var decodedCookie = decodeURIComponent(document.cookie);
     var ca = decodedCookie.split(';');
-    for(var i = 0; i <ca.length; i++) {
+    for (var i = 0; i < ca.length; i++) {
         var c = ca[i];
         while (c.charAt(0) == ' ') {
             c = c.substring(1);
@@ -29,10 +29,16 @@ function getCookie(cname) {
     return "";
 }
 
+var kills = 0;
+
 function setupSocketListeners() {
     socket.on("playerData", function(player) {
         $("n").innerHTML = player.color;
         // document.cookie = "austin_id=" + player.clientId;
+    });
+    socket.on("killUpdate", function() {
+        console.log("+kill");
+        $("kills").innerHTML = "kills" + ++kills;
     });
 }
 
@@ -50,7 +56,7 @@ function setupListeners() {
     $("left").addEventListener(upEvent, clearLeft);
     $("right").addEventListener(downEvent, right);
     $("right").addEventListener(upEvent, clearRight);
-    $("shoot").onclick = function(){
+    $("shoot").onclick = function() {
         socket.emit("shoot");
     }
 
