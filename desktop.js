@@ -21,6 +21,9 @@ function setupSocketListeners() {
                 var id = players[i].id;
                 var player = players[i];
                 characters[id].walk(player.x);
+                if (player.right && characters[id].width < 0 || !player.right && characters[id].width > 0) {
+                    characters[id].width *= -1;
+                }
                 characters[id].x = player.x;
                 characters[id].y = player.y;
             }
@@ -28,9 +31,12 @@ function setupSocketListeners() {
     });
     socket.on("bulletUpdate", function(bullets) {
         for (var i = 0; i < bullets.length; i++) {
-            if (bullets[i] && allBullets[id]) {
+            if (bullets[i]) {
                 var id = bullets[i].bulletId;
                 var bullet = bullets[i];
+                if (bullet.right && allBullets[id].width < 0 || !bullet.right && allBullets[id].width > 0) {
+                    allBullets[id].width *= -1;
+                }
                 allBullets[id].x = bullet.x;
                 allBullets[id].y = bullet.y;
             }
@@ -59,7 +65,7 @@ function setupSocketListeners() {
 function addPlayers(data) {
     for (var i = 0; i < data.length; i++) {
         if (data[i]) {
-            addCharacter(data[i].color, data[i].x, data[i].y, data[i].id);
+            addCharacter(data[i].color, data[i].x, data[i].y, data[i].id, data[i].right);
         }
     }
 }
@@ -149,8 +155,11 @@ function create() {
     // green.animations.play("walk");       
 }
 
-function addCharacter(spriteName, x, y, id) {
+function addCharacter(spriteName, x, y, id, facingRight) {
     var c = new Character(game, x, y, spriteName);
+    if (!facingRight) {
+        c.width *= -1;
+    }
     game.add.existing(c);
     characters[id] = c;
 }

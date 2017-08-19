@@ -53,6 +53,7 @@ io.of("/mobile").on("connection", function(socket) {
     };
     var player = {
         id: lastPlayerId,
+        right: true,
         x: randomInt(100, 400),
         y: randomInt(100, 400),
         color: colors[lastPlayerId % colors.length]
@@ -71,6 +72,7 @@ io.of("/mobile").on("connection", function(socket) {
         var bullet = {
             playerId: socket.playerData.id,
             bulletId: lastBulletId,
+            right: player.right,
             x: player.x,
             y: player.y
         };
@@ -87,6 +89,7 @@ io.of("/mobile").on("connection", function(socket) {
     // to send out something
     socket.on("phoneData", function(phoneData) {
         players[socket.playerData.id].x += phoneData.horizontal;
+        players[socket.playerData.id].right = (phoneData.horizontal > 0);
         // io.of("/desktop").to(desktopId).emit("move", socket.player);
     });
 });
@@ -107,7 +110,7 @@ io.of("/desktop").on("connection", function(socket) {
         socket.emit("update", players);
         socket.emit("bulletUpdate", projectiles);
         projectiles.forEach(function(element) {
-            element.x++;
+            element.x += 5 * (element.right ? 1 : -1);
         });
     });
 });
