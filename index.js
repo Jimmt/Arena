@@ -27,8 +27,13 @@ var lastPlayerId = 0;
 var lastBulletId = 0;
 var desktopId; // switch to array later
 var colors = ["beige", "blue", "green", "pink"];
+var playerWidth = 128 / 2;
+var playerHeight = 128;
 var bulletWidth = 54,
     bulletHeight = 9;
+var gunHeight = 70;
+var gunWidth = 35;
+var bulletOffset = 136;
 
 function randomInt(low, high) {
     return Math.floor(Math.random() * (high - low) + low);
@@ -73,8 +78,8 @@ io.of("/mobile").on("connection", function(socket) {
             playerId: socket.playerData.id,
             bulletId: lastBulletId,
             right: player.right,
-            x: player.x,
-            y: player.y
+            x: player.right ? player.x + playerWidth / 2 + gunWidth - 20 : player.x - gunWidth - playerWidth / 2 - bulletWidth + 20,
+            y: player.y + bulletOffset - gunHeight / 2
         };
         projectiles[lastBulletId] = bullet;
         lastBulletId++;
@@ -100,6 +105,7 @@ io.of("/desktop").on("connection", function(socket) {
     desktopId = socket.id;
 
     socket.emit("allPlayers", players);
+    socket.emit("allBullets", projectiles);
 
     socket.on("disconnect", function() {
         // should remove from desktops
@@ -111,6 +117,15 @@ io.of("/desktop").on("connection", function(socket) {
         socket.emit("bulletUpdate", projectiles);
         projectiles.forEach(function(element) {
             element.x += 5 * (element.right ? 1 : -1);
+            // players.forEach(function(player) {
+            //     if (element.x + bulletWidth > player.x - playerWidth / 2 && element.x < player.x + playerWidth / 2) {
+            //         var hitboxY = element.y + playerHeight / 2;
+            //         var hitboxHeight = playerHeight / 2;
+            //         if (element.y + bulletHeight > hitboxY && element.y < hitboxY + hitboxHeight) {
+            //             console.log("collision");
+            //         }
+            //     }
+            // });
         });
     });
 });

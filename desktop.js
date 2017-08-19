@@ -49,6 +49,14 @@ function setupSocketListeners() {
         console.log("new player");
         addCharacter(data.color, data.x, data.y, data.id);
     });
+    socket.on("allBullets", function(data) {
+        console.log("all bullets");
+        if (reachedCreate) {
+            addBullets(data);
+        } else {
+            bulletsToCreate = data;
+        }
+    });
     socket.on("allPlayers", function(data) {
         console.log("all players");
         if (reachedCreate) {
@@ -62,20 +70,13 @@ function setupSocketListeners() {
     });
 }
 
-function addPlayers(data) {
-    for (var i = 0; i < data.length; i++) {
-        if (data[i]) {
-            addCharacter(data[i].color, data[i].x, data[i].y, data[i].id, data[i].right);
-        }
-    }
-}
-
 var game = new Phaser.Game(1200, 675, Phaser.CANVAS, "game", { preload: preload, create: create, update: update, render: render });
 var characterSprites = ["beige", "blue", "green", "pink"];
 var characters = [];
 var allBullets = [];
 var reachedCreate = false;
 var playersToCreate = [];
+var bulletsToCreate = [];
 
 var Character = function(game, x, y, spriteName) {
     spriteName = spriteName[0].toUpperCase() + spriteName.substring(1);
@@ -144,15 +145,33 @@ function preload() {
     game.load.image("gun", "assets/sprites/raygunPurple.png");
     game.load.atlasJSONArray("characters", "assets/sprites/characters.png", "assets/sprites/characters.json");
 }
-var green;
 
 function create() {
     reachedCreate = true;
     addPlayers(playersToCreate);
+    addBullets(bulletsToCreate);
+}
 
-    // green = game.add.sprite(0, 0, "characters", "alienGreen_stand");
-    // green.animations.add("walk", ["alienGreen_walk1", "alienGreen_walk2"], 7, true, false);
-    // green.animations.play("walk");       
+function addBullets(data) {
+    for (var i = 0; i < data.length; i++) {
+        if (data[i]) {
+            addBullet(data[i].x, data[i].y, data[i].bulletId, data[i].playerId);
+        }
+    }
+}
+
+function addBullet(x, y, id, playerId) {
+    var bullet = game.add.sprite(x, y, "characters", "laser");
+    allBullets[id] = bullet;    
+    characters[playerId].bullets.push(bullet);
+}
+
+function addPlayers(data) {
+    for (var i = 0; i < data.length; i++) {
+        if (data[i]) {
+            addCharacter(data[i].color, data[i].x, data[i].y, data[i].id, data[i].right);
+        }
+    }
 }
 
 function addCharacter(spriteName, x, y, id, facingRight) {
@@ -170,9 +189,8 @@ function removeCharacter(id) {
 }
 
 function update() {
-    // console.log(characters);
+    // console.log(characters[0].gun.y); //343
     socket.emit("updateRequest");
-
 }
 
 function render() {
