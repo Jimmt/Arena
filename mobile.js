@@ -50,6 +50,9 @@ function setupListeners() {
     $("left").addEventListener(upEvent, clearLeft);
     $("right").addEventListener(downEvent, right);
     $("right").addEventListener(upEvent, clearRight);
+    $("shoot").onclick = function(){
+        socket.emit("shoot");
+    }
 
     $("left").addEventListener("touchcancel", clearLeft);
     $("right").addEventListener("touchcancel", clearRight);

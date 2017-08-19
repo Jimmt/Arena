@@ -15,14 +15,29 @@ function setupSocketListeners() {
     //     characters[player.id].x = player.x;
     //     characters[player.id].y = player.y;
     // });
-    socket.on("update", function(player) {
-        if (player) {
-            characters[player.id].walk(player.x);
-            characters[player.id].x = player.x;
-            characters[player.id].y = player.y;
-        } else {
-            // console.log("server updated player = " + player);
+    socket.on("update", function(players) {
+        for (var i = 0; i < players.length; i++) {
+            if (players[i]) {
+                var id = players[i].id;
+                var player = players[i];
+                characters[id].walk(player.x);
+                characters[id].x = player.x;
+                characters[id].y = player.y;
+            }
         }
+    });
+    socket.on("bulletUpdate", function(bullets) {
+        for (var i = 0; i < bullets.length; i++) {
+            if (bullets[i] && allBullets[id]) {
+                var id = bullets[i].bulletId;
+                var bullet = bullets[i];
+                allBullets[id].x = bullet.x;
+                allBullets[id].y = bullet.y;
+            }
+        }
+    });
+    socket.on("newBullet", function(bullet) {
+        characters[bullet.playerId].shoot(bullet.x, bullet.y, bullet.bulletId);
     });
     socket.on("newPlayer", function(data) {
         console.log("new player");
@@ -52,6 +67,7 @@ function addPlayers(data) {
 var game = new Phaser.Game(1200, 675, Phaser.CANVAS, "game", { preload: preload, create: create, update: update, render: render });
 var characterSprites = ["beige", "blue", "green", "pink"];
 var characters = [];
+var allBullets = [];
 var reachedCreate = false;
 var playersToCreate = [];
 
@@ -73,6 +89,7 @@ var Character = function(game, x, y, spriteName) {
 
 Character.prototype = Object.create(Phaser.Sprite.prototype);
 Character.prototype.constructor = Character;
+Character.prototype.bullets = [];
 Character.prototype.update = function() {
     if (this.gun) {
         var xOffset = -5;
@@ -84,7 +101,13 @@ Character.prototype.update = function() {
         this.gun.x = xOffset;
         this.gun.y = yOffset;
     }
+
 };
+Character.prototype.shoot = function(x, y, id) {
+    var bullet = game.add.sprite(x, y, "characters", "laser");
+    this.bullets.push(bullet);
+    allBullets[id] = bullet;
+}
 
 var stillFrames = 0;
 Character.prototype.walk = function(x) {
@@ -139,9 +162,8 @@ function removeCharacter(id) {
 
 function update() {
     // console.log(characters);
-    for (var id in characters) {
-        socket.emit("updateRequest", id);
-    }
+    socket.emit("updateRequest");
+
 }
 
 function render() {

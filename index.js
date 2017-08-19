@@ -22,9 +22,13 @@ app.get("/mobile", function(req, res) {
 });
 
 var players = [];
+var projectiles = [];
 var lastPlayerId = 0;
+var lastBulletId = 0;
 var desktopId; // switch to array later
 var colors = ["beige", "blue", "green", "pink"];
+var bulletWidth = 54,
+    bulletHeight = 9;
 
 function randomInt(low, high) {
     return Math.floor(Math.random() * (high - low) + low);
@@ -62,6 +66,19 @@ io.of("/mobile").on("connection", function(socket) {
     socket.emit("playerData", player);
     io.of("/desktop").to(desktopId).emit("newPlayer", player);
 
+    socket.on("shoot", function() {
+        var player = players[socket.playerData.id];
+        var bullet = {
+            playerId: socket.playerData.id,
+            bulletId: lastBulletId,
+            x: player.x,
+            y: player.y
+        };
+        projectiles[lastBulletId] = bullet;
+        lastBulletId++;
+        io.of("/desktop").to(desktopId).emit("newBullet", bullet);
+    });
+
     socket.on("disconnect", function() {
         console.log("a phone disconnected");
         delete players[socket.playerData.id];
@@ -74,6 +91,7 @@ io.of("/mobile").on("connection", function(socket) {
     });
 });
 
+
 io.of("/desktop").on("connection", function(socket) {
     console.log("a desktop connected");
     desktopId = socket.id;
@@ -85,10 +103,12 @@ io.of("/desktop").on("connection", function(socket) {
         console.log("a desktop disconnected");
     });
 
-    socket.on("updateRequest", function(id) {
-        // console.log("searching for id=" + id);
-        var desiredPlayer = players[id];
-        socket.emit("update", desiredPlayer);
+    socket.on("updateRequest", function() {
+        socket.emit("update", players);
+        socket.emit("bulletUpdate", projectiles);
+        projectiles.forEach(function(element) {
+            element.x++;
+        });
     });
 });
 
