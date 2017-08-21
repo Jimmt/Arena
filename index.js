@@ -23,6 +23,7 @@ app.get("/mobile", function(req, res) {
 
 var players = [];
 var projectiles = [];
+var tiles = [];
 var lastPlayerId = 0;
 var lastBulletId = 0;
 var desktopId; // switch to array later
@@ -109,6 +110,16 @@ io.of("/desktop").on("connection", function(socket) {
     socket.emit("allPlayers", players);
     socket.emit("allBullets", projectiles);
 
+    var tileWidth = 64;
+    var numTiles = 18;
+    for(var i = 0; i < numTiles; i++){
+        var name = "planetMid";
+        if(i == 0) name = "planetLeft";
+        if(i == numTiles - 1) name = "planetRight";
+        tiles.push({x: i * 64, y: 600, name: name });
+    }
+    socket.emit("map", tiles);
+
     socket.on("disconnect", function() {
         // should remove from desktops
         console.log("a desktop disconnected");
@@ -120,6 +131,9 @@ io.of("/desktop").on("connection", function(socket) {
         projectiles.forEach(function(element) {
             element.x += 5 * (element.right ? 1 : -1);
             players.forEach(function(player) {
+
+
+                // 
                 if (element.x + bulletWidth > player.x - playerWidth / 2 && element.x < player.x + playerWidth / 2) {
                     var hitboxY = player.y + playerHeight / 2;
                     var hitboxHeight = playerHeight / 2;

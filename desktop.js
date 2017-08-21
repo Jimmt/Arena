@@ -29,6 +29,14 @@ function setupSocketListeners() {
             }
         }
     });
+    socket.on("map", function(map) {
+        if (reachedCreate) {
+            addTiles(map);
+        } else {
+            tilesToCreate = map;
+        }
+
+    });
     socket.on("bulletUpdate", function(bullets) {
         for (var i = 0; i < bullets.length; i++) {
             if (bullets[i]) {
@@ -83,6 +91,7 @@ var allBullets = [];
 var reachedCreate = false;
 var playersToCreate = [];
 var bulletsToCreate = [];
+var tilesToCreate = [];
 
 var Character = function(game, x, y, spriteName) {
     spriteName = spriteName[0].toUpperCase() + spriteName.substring(1);
@@ -150,12 +159,31 @@ function preload() {
     });
     game.load.image("gun", "assets/sprites/raygunPurple.png");
     game.load.atlasJSONArray("characters", "assets/sprites/characters.png", "assets/sprites/characters.json");
+
+    game.load.image("planetLeft", "assets/sprites/planetLeft.png");
+    game.load.image("planetMid", "assets/sprites/planetMid.png");
+    game.load.image("planetRight", "assets/sprites/planetRight.png");
 }
 
 function create() {
     reachedCreate = true;
     addPlayers(playersToCreate);
     addBullets(bulletsToCreate);
+    addTiles(tilesToCreate);
+}
+
+
+function addTiles(data) {
+    console.log(data);
+    for (var i = 0; i < data.length; i++) {
+        addTile(data[i].x, data[i].y, data[i].name);
+    }
+}
+
+function addTile(x, y, name) {
+    var element = game.add.sprite(x, y, name);
+    element.width /= 2;
+    element.height /= 2;
 }
 
 function addBullets(data) {
