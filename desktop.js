@@ -88,6 +88,7 @@ var game = new Phaser.Game(1200, 675, Phaser.CANVAS, "game", { preload: preload,
 var characterSprites = ["beige", "blue", "green", "pink"];
 var characters = [];
 var allBullets = [];
+var tiles = [];
 var reachedCreate = false;
 var playersToCreate = [];
 var bulletsToCreate = [];
@@ -165,7 +166,10 @@ function preload() {
     game.load.image("planetRight", "assets/sprites/planetRight.png");
 }
 
+var gfx;
+
 function create() {
+    gfx = game.add.graphics(0, 0);
     reachedCreate = true;
     addPlayers(playersToCreate);
     addBullets(bulletsToCreate);
@@ -184,6 +188,7 @@ function addTile(x, y, name) {
     var element = game.add.sprite(x, y, name);
     element.width /= 2;
     element.height /= 2;
+    tiles.push(element);
 }
 
 function addBullets(data) {
@@ -232,6 +237,19 @@ function removeBullet(id) {
 function update() {
     // console.log(characters[0].gun.y); //343
     socket.emit("updateRequest");
+
+    // characters.forEach(function(character){
+    //     gfx.beginFill(0xFF0000, 1);
+    //     gfx.drawCircle(character.x, character.y, 5);
+    // });
+    // allBullets.forEach(function(character){
+    //     gfx.beginFill(0xFF0000, 1);
+    //     gfx.drawCircle(character.x, character.y, 5);
+    // });
+    // tiles.forEach(function(character){
+    //     gfx.beginFill(0xFF0000, 1);
+    //     gfx.drawCircle(character.x, character.y, 5);
+    // });
 }
 
 function render() {

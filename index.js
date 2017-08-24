@@ -35,6 +35,8 @@ var bulletWidth = 54,
 var gunHeight = 70;
 var gunWidth = 35;
 var bulletOffset = 136;
+var tileWidth = 64,
+    tileHeight = 64;
 
 function randomInt(low, high) {
     return Math.floor(Math.random() * (high - low) + low);
@@ -110,13 +112,12 @@ io.of("/desktop").on("connection", function(socket) {
     socket.emit("allPlayers", players);
     socket.emit("allBullets", projectiles);
 
-    var tileWidth = 64;
     var numTiles = 18;
-    for(var i = 0; i < numTiles; i++){
+    for (var i = 0; i < numTiles; i++) {
         var name = "planetMid";
-        if(i == 0) name = "planetLeft";
-        if(i == numTiles - 1) name = "planetRight";
-        tiles.push({x: i * 64, y: 600, name: name });
+        if (i == 0) name = "planetLeft";
+        if (i == numTiles - 1) name = "planetRight";
+        tiles.push({ x: i * 64, y: 600, name: name });
     }
     socket.emit("map", tiles);
 
@@ -130,10 +131,8 @@ io.of("/desktop").on("connection", function(socket) {
         socket.emit("bulletUpdate", projectiles);
         projectiles.forEach(function(element) {
             element.x += 5 * (element.right ? 1 : -1);
+
             players.forEach(function(player) {
-
-
-                // 
                 if (element.x + bulletWidth > player.x - playerWidth / 2 && element.x < player.x + playerWidth / 2) {
                     var hitboxY = player.y + playerHeight / 2;
                     var hitboxHeight = playerHeight / 2;
@@ -142,6 +141,23 @@ io.of("/desktop").on("connection", function(socket) {
                     }
                 }
             });
+        });
+
+        players.forEach(function(player) {
+            var gravity = 1;
+            for (var i = 0; i < tiles.length; i++) {
+                var tile = tiles[i];
+                // falling check
+                if (player.x + playerWidth / 2 >= tile.x && player.x <= tile.x + tileWidth) {
+                    var hitboxY = player.y + playerHeight / 2;
+                    var hitboxHeight = playerHeight / 2;
+
+                    if (hitboxY + hitboxHeight >= tile.y && hitboxY <= tile.y + tileHeight) {
+                        gravity = 0;
+                    }
+                }
+            }
+            player.y += gravity;
         });
     });
 });
