@@ -64,8 +64,10 @@ io.of("/mobile").on("connection", function(socket) {
         right: true,
         x: randomInt(100, 400),
         y: 100,
+        vx: 0,
         socketId: socket.id,
-        color: colors[lastPlayerId % colors.length]
+        color: colors[lastPlayerId % colors.length],
+        airTime: 0
     };
     players[lastPlayerId] = player;
 
@@ -100,6 +102,7 @@ io.of("/mobile").on("connection", function(socket) {
     socket.on("phoneData", function(phoneData) {
         players[socket.playerData.id].x += phoneData.horizontal;
         players[socket.playerData.id].right = (phoneData.horizontal > 0);
+        players[socket.playerData.id].vx = phoneData.horizontal;
         // io.of("/desktop").to(desktopId).emit("move", socket.player);
     });
 });
@@ -144,20 +147,41 @@ io.of("/desktop").on("connection", function(socket) {
         });
 
         players.forEach(function(player) {
-            var gravity = 1;
+            player.airTime += 1 / 60;
+            var gravity = 10;
             for (var i = 0; i < tiles.length; i++) {
                 var tile = tiles[i];
                 // falling check
+
                 if (player.x + playerWidth / 2 >= tile.x && player.x <= tile.x + tileWidth) {
                     var hitboxY = player.y + playerHeight / 2;
                     var hitboxHeight = playerHeight / 2;
 
-                    if (hitboxY + hitboxHeight >= tile.y && hitboxY <= tile.y + tileHeight) {
+                    if (hitboxY + hitboxHeight > tile.y && hitboxY < tile.y + tileHeight) {
+                        var vy = player.airTime * gravity;
+
+                        if (vy > 0) {
+                            player.y = tile.y - playerHeight;
+                        } else if (vy < 0) {
+                            player.y = tile.y - tileHeight;
+                        }
+
                         gravity = 0;
+                        player.airTime = 0;
+                    }
+
+                    if (hitboxY + hitboxHeight == tile.y && hitboxY == tile.y + tileHeight) {
+                        var vx = player.vx;
+                        
+                        if (vx > 0) {
+                            player.x = tile.x - playerWidth / 2;
+                        } else if (vx < 0) {
+                            player.x = tile.x + tileWidth + playerWidth / 2;
+                        }
                     }
                 }
             }
-            player.y += gravity;
+            player.y += gravity * player.airTime;
         });
     });
 });
