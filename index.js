@@ -52,6 +52,19 @@ function numberOfPlayers() {
     return count;
 }
 
+function createMapDebug() {
+    var numTiles = 18;
+    for (var i = 0; i < numTiles; i++) {
+        var name = "planetMid";
+        if (i == 0) name = "planetLeft";
+        if (i == numTiles - 1) name = "planetRight";
+        tiles.push({ x: i * tileWidth, y: 600, name: name });
+    }
+    tiles.push({ x: numTiles * tileHeight, y: 600 + tileHeight, name: "planetMid" });
+}
+
+createMapDebug();
+
 io.of("/mobile").on("connection", function(socket) {
     console.log("a phone connected");
     console.log("creating new player");
@@ -112,76 +125,71 @@ io.of("/desktop").on("connection", function(socket) {
     console.log("a desktop connected");
     desktopId = socket.id;
 
-    socket.emit("allPlayers", players);
-    socket.emit("allBullets", projectiles);
+    socket.on("ready", function() {
+        socket.emit("allPlayers", players);
+        socket.emit("allBullets", projectiles);
 
-    var numTiles = 18;
-    for (var i = 0; i < numTiles; i++) {
-        var name = "planetMid";
-        if (i == 0) name = "planetLeft";
-        if (i == numTiles - 1) name = "planetRight";
-        tiles.push({ x: i * 64, y: 600, name: name });
-    }
-    socket.emit("map", tiles);
+        socket.emit("map", tiles);
 
-    socket.on("disconnect", function() {
-        // should remove from desktops
-        console.log("a desktop disconnected");
-    });
-
-    socket.on("updateRequest", function() {
-        socket.emit("update", players);
-        socket.emit("bulletUpdate", projectiles);
-        projectiles.forEach(function(element) {
-            element.x += 5 * (element.right ? 1 : -1);
-
-            players.forEach(function(player) {
-                if (element.x + bulletWidth > player.x - playerWidth / 2 && element.x < player.x + playerWidth / 2) {
-                    var hitboxY = player.y + playerHeight / 2;
-                    var hitboxHeight = playerHeight / 2;
-                    if (element.y + bulletHeight > hitboxY && element.y < hitboxY + hitboxHeight) {
-                        playerHit(socket, element, player);
-                    }
-                }
-            });
+        socket.on("disconnect", function() {
+            // should remove from desktops
+            console.log("a desktop disconnected");
         });
 
-        players.forEach(function(player) {
-            player.airTime += 1 / 60;
-            var gravity = 10;
-            for (var i = 0; i < tiles.length; i++) {
-                var tile = tiles[i];
-                // falling check
+        socket.on("updateRequest", function() {
+            socket.emit("update", players);
+            socket.emit("bulletUpdate", projectiles);
+            projectiles.forEach(function(element) {
+                element.x += 5 * (element.right ? 1 : -1);
 
-                if (player.x + playerWidth / 2 >= tile.x && player.x <= tile.x + tileWidth) {
-                    var hitboxY = player.y + playerHeight / 2;
-                    var hitboxHeight = playerHeight / 2;
+                players.forEach(function(player) {
+                    if (element.x + bulletWidth > player.x - playerWidth / 2 && element.x < player.x + playerWidth / 2) {
+                        var hitboxY = player.y + playerHeight / 2;
+                        var hitboxHeight = playerHeight / 2;
+                        if (element.y + bulletHeight > hitboxY && element.y < hitboxY + hitboxHeight) {
+                            playerHit(socket, element, player);
+                        }
+                    }
+                });
+            });
 
-                    if (hitboxY + hitboxHeight > tile.y && hitboxY < tile.y + tileHeight) {
-                        var vy = player.airTime * gravity;
+            players.forEach(function(player) {
+                player.airTime += 1 / 60;
+                var gravity = 10;
+                for (var i = 0; i < tiles.length; i++) {
+                    var tile = tiles[i];
+                    // falling check
 
-                        if (vy > 0) {
-                            player.y = tile.y - playerHeight;
-                        } else if (vy < 0) {
-                            player.y = tile.y - tileHeight;
+                    if (player.x + playerWidth / 2 >= tile.x && player.x <= tile.x + tileWidth) {
+                        var hitboxY = player.y + playerHeight / 2;
+                        var hitboxHeight = playerHeight / 2;
+
+                        if (hitboxY + hitboxHeight > tile.y && hitboxY < tile.y + tileHeight) {
+                            var vy = player.airTime * gravity;
+
+                            if (vy > 0) {
+                                player.y = tile.y - playerHeight;
+                            } else if (vy < 0) {
+                                player.y = tile.y - tileHeight;
+                            }
+
+                            gravity = 0;
+                            player.airTime = 0;
                         }
 
-                        gravity = 0;
-                        player.airTime = 0;
-                    }
+                        if (hitboxY + hitboxHeight == tile.y && hitboxY == tile.y + tileHeight) {
+                            var vx = player.vx;
 
-                    if (hitboxY + hitboxHeight == tile.y && hitboxY == tile.y + tileHeight) {
-                        var vx = player.vx;
-                        
-                        if (vx > 0) {
-                            player.x = tile.x - playerWidth / 2;
-                        } else if (vx < 0) {
-                            player.x = tile.x + tileWidth + playerWidth / 2;
+                            if (vx > 0) {
+                                player.x = tile.x - playerWidth / 2;
+                            } else if (vx < 0) {
+                                player.x = tile.x + tileWidth + playerWidth / 2;
+                            }
                         }
                     }
                 }
-            }
-            player.y += gravity * player.airTime;
+                player.y += gravity * player.airTime;
+            });
         });
     });
 });

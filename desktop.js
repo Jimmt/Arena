@@ -17,7 +17,7 @@ function setupSocketListeners() {
     // });
     socket.on("update", function(players) {
         for (var i = 0; i < players.length; i++) {
-            if (players[i]) {
+            if (players[i] && characters[players[i].id]) {
                 var id = players[i].id;
                 var player = players[i];
                 characters[id].walk(player.x);
@@ -30,16 +30,11 @@ function setupSocketListeners() {
         }
     });
     socket.on("map", function(map) {
-        if (reachedCreate) {
             addTiles(map);
-        } else {
-            tilesToCreate = map;
-        }
-
     });
     socket.on("bulletUpdate", function(bullets) {
         for (var i = 0; i < bullets.length; i++) {
-            if (bullets[i]) {
+            if (bullets[i] && allBullets[bullets[i].bulletId]) {
                 var id = bullets[i].bulletId;
                 var bullet = bullets[i];
                 if (bullet.right && allBullets[id].width < 0 || !bullet.right && allBullets[id].width > 0) {
@@ -59,19 +54,11 @@ function setupSocketListeners() {
     });
     socket.on("allBullets", function(data) {
         console.log("all bullets");
-        if (reachedCreate) {
             addBullets(data);
-        } else {
-            bulletsToCreate = data;
-        }
     });
     socket.on("allPlayers", function(data) {
         console.log("all players");
-        if (reachedCreate) {
-            addPlayers(data);
-        } else {
-            playersToCreate = data;
-        }
+        addPlayers(data);
     });
     socket.on("remove", function(id) {
         removeCharacter(id);
@@ -89,10 +76,6 @@ var characterSprites = ["beige", "blue", "green", "pink"];
 var characters = [];
 var allBullets = [];
 var tiles = [];
-var reachedCreate = false;
-var playersToCreate = [];
-var bulletsToCreate = [];
-var tilesToCreate = [];
 
 var Character = function(game, x, y, spriteName) {
     spriteName = spriteName[0].toUpperCase() + spriteName.substring(1);
@@ -170,15 +153,11 @@ var gfx;
 
 function create() {
     gfx = game.add.graphics(0, 0);
-    reachedCreate = true;
-    addPlayers(playersToCreate);
-    addBullets(bulletsToCreate);
-    addTiles(tilesToCreate);
+    socket.emit("ready");
 }
 
 
 function addTiles(data) {
-    console.log(data);
     for (var i = 0; i < data.length; i++) {
         addTile(data[i].x, data[i].y, data[i].name);
     }
@@ -252,6 +231,4 @@ function update() {
     // });
 }
 
-function render() {
-
-}
+function render() {}
