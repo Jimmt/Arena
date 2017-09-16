@@ -27,7 +27,6 @@ var tiles = [];
 var lastPlayerId = 0;
 var lastBulletId = 0;
 var desktopId; // switch to array later
-var colors = ["beige", "blue", "green", "pink"];
 var playerWidth = 128 / 2;
 var playerHeight = 128;
 var bulletWidth = 54,
@@ -53,14 +52,17 @@ function numberOfPlayers() {
 }
 
 function createMapDebug() {
-    var numTiles = 18;
+    var numTiles = 16;
     for (var i = 0; i < numTiles; i++) {
         var name = "planetMid";
-        if (i == 0) name = "planetLeft";
-        if (i == numTiles - 1) name = "planetRight";
-        tiles.push({ x: i * tileWidth, y: 600, name: name });
+        var y = 600;
+        if (i == 0) { name = "planetLeft"; }
+        if (i == numTiles - 1) {
+            name = "planetRight";
+            y = 600 - tileHeight;
+        }
+        tiles.push({ x: i * tileWidth, y: y, name: name });
     }
-    tiles.push({ x: numTiles * tileHeight, y: 600 + tileHeight, name: "planetMid" });
 }
 
 createMapDebug();
@@ -74,12 +76,12 @@ io.of("/mobile").on("connection", function(socket) {
     };
     var player = {
         id: lastPlayerId,
-        right: true,
         x: randomInt(100, 400),
         y: 100,
+        rotation: 0,
         vx: 0,
         socketId: socket.id,
-        color: colors[lastPlayerId % colors.length],
+        // color: colors[lastPlayerId % colors.length],
         airTime: 0
     };
     players[lastPlayerId] = player;
@@ -97,9 +99,11 @@ io.of("/mobile").on("connection", function(socket) {
             player: player,
             playerId: socket.playerData.id,
             bulletId: lastBulletId,
-            right: player.right,
-            x: player.right ? player.x + playerWidth / 2 + gunWidth - 20 : player.x - gunWidth - playerWidth / 2 - bulletWidth + 20,
-            y: player.y + bulletOffset - gunHeight / 2
+            x: player.x,
+            y: player.y,
+            vx: 1,
+            vy: 1,
+            rotation: 0
         };
         projectiles[lastBulletId] = bullet;
         lastBulletId++;
@@ -113,9 +117,14 @@ io.of("/mobile").on("connection", function(socket) {
     });
     // to send out something
     socket.on("phoneData", function(phoneData) {
-        players[socket.playerData.id].x += phoneData.horizontal;
-        players[socket.playerData.id].right = (phoneData.horizontal > 0);
-        players[socket.playerData.id].vx = phoneData.horizontal;
+        var player = players[socket.playerData.id];
+        player.x += phoneData.horizontal;
+        player.y += phoneData.vertical;
+        if (phoneData.shootX == 0 && phoneData.shootY == 0) {
+            player.rotation = 180 + Math.atan2(phoneData.vertical, phoneData.horizontal) * 180 / Math.PI;
+        } else {
+            player.rotation = 180 + Math.atan2(phoneData.shootY, phoneData.shootX) * 180 / Math.PI;
+        }
         // io.of("/desktop").to(desktopId).emit("move", socket.player);
     });
 });
@@ -140,7 +149,8 @@ io.of("/desktop").on("connection", function(socket) {
             socket.emit("update", players);
             socket.emit("bulletUpdate", projectiles);
             projectiles.forEach(function(element) {
-                element.x += 5 * (element.right ? 1 : -1);
+                element.x += element.vx;
+                element.y += element.vy;
 
                 players.forEach(function(player) {
                     if (element.x + bulletWidth > player.x - playerWidth / 2 && element.x < player.x + playerWidth / 2) {
@@ -155,7 +165,7 @@ io.of("/desktop").on("connection", function(socket) {
 
             players.forEach(function(player) {
                 player.airTime += 1 / 60;
-                var gravity = 10;
+                var gravity = 0;
                 for (var i = 0; i < tiles.length; i++) {
                     var tile = tiles[i];
                     // falling check

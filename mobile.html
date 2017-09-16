@@ -2,10 +2,12 @@
 <html id="body">
 
 <head>
-    <script src="resources/socket.io.js"></script> <!-- ver 2.0.3 -->
+    <script src="resources/socket.io.js"></script>
+    <!-- ver 2.0.3 -->
     <script src="mobile.js"></script>
+    <script src="virtualjoystick.js"></script>
     <style type="text/css">
-    .noSelect {
+    div {
         -webkit-touch-callout: none;
         -webkit-user-select: none;
         -khtml-user-select: none;
@@ -14,10 +16,9 @@
         user-select: none;
     }
 
-    #left,
-    #right, #shoot {
-        width: 100px;
-        height: 50px;
+    #move, #shoot {
+        width: 47%;
+        height: 300px;
         outline: 1px black solid;
         text-align: center;
         display: inline-block;
@@ -26,12 +27,9 @@
 </head>
 
 <body id="body">
-    MOBILE
-    <div id="left" class="noSelect">left</div>
-    <div id="right" class="noSelect">right</div>
-    <div id="shoot" class="noSelect">shoot</div>
+    <p>MOBILE</p>
     <div id="n"></div>
-    <div id="kills"></div>  
+    <div id="kills"></div>
 </body>
 
 </html>

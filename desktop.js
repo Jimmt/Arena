@@ -20,17 +20,18 @@ function setupSocketListeners() {
             if (players[i] && characters[players[i].id]) {
                 var id = players[i].id;
                 var player = players[i];
-                characters[id].walk(player.x);
+
                 if (player.right && characters[id].width < 0 || !player.right && characters[id].width > 0) {
                     characters[id].width *= -1;
                 }
                 characters[id].x = player.x;
                 characters[id].y = player.y;
+                characters[id].angle = player.rotation;
             }
         }
     });
     socket.on("map", function(map) {
-            addTiles(map);
+        addTiles(map);
     });
     socket.on("bulletUpdate", function(bullets) {
         for (var i = 0; i < bullets.length; i++) {
@@ -50,11 +51,11 @@ function setupSocketListeners() {
     });
     socket.on("newPlayer", function(data) {
         console.log("new player");
-        addCharacter(data.color, data.x, data.y, data.id);
+        addCharacter("hitman", data.x, data.y, data.id);
     });
     socket.on("allBullets", function(data) {
         console.log("all bullets");
-            addBullets(data);
+        addBullets(data);
     });
     socket.on("allPlayers", function(data) {
         console.log("all players");
@@ -72,41 +73,23 @@ function setupSocketListeners() {
 }
 
 var game = new Phaser.Game(1200, 675, Phaser.CANVAS, "game", { preload: preload, create: create, update: update, render: render });
-var characterSprites = ["beige", "blue", "green", "pink"];
 var characters = [];
 var allBullets = [];
 var tiles = [];
 
 var Character = function(game, x, y, spriteName) {
-    spriteName = spriteName[0].toUpperCase() + spriteName.substring(1);
-    Phaser.Sprite.call(this, game, x, y, "characters", "alien" + spriteName + "_stand");
-    this.anchor.setTo(0.5, 0);
+    Phaser.Sprite.call(this, game, x, y, spriteName);
+    this.anchor.setTo(14 / 54, 21 / 43);
     this.width /= 2;
     this.height /= 2;
     console.log(spriteName);
-    this.gun = game.make.sprite(0, 0, "gun");
-    this.gun.width *= 2;
-    this.gun.height *= 2;
-    this.addChild(this.gun);
-    this.animations.add("stand", ["alien" + spriteName + "_stand"], 10, true, false);
-    this.animations.add("walk", ["alien" + spriteName + "_walk1", "alien" + spriteName + "_walk2"], 7, true, false);
-    this.animations.play("stand");
 }
 
 Character.prototype = Object.create(Phaser.Sprite.prototype);
 Character.prototype.constructor = Character;
 Character.prototype.bullets = [];
 Character.prototype.update = function() {
-    if (this.gun) {
-        var xOffset = -5;
-        var yOffset = 142;
-        if (this.animations.currentAnim.name == "walk" && this.animations.currentAnim.isPlaying) {
-            xOffset = 0;
-            yOffset = 129;
-        }
-        this.gun.x = xOffset;
-        this.gun.y = yOffset;
-    }
+
 
 };
 Character.prototype.shoot = function(x, y, id) {
@@ -115,38 +98,19 @@ Character.prototype.shoot = function(x, y, id) {
     allBullets[id] = bullet;
 }
 
-var stillFrames = 0;
-Character.prototype.walk = function(x) {
-    // console.log(this.animations.currentAnim.frame);
-    if (x != this.x) {
-        stillFrames = 0;
-        this.animations.play("walk");
-        if ((this.width < 0 && x > this.x) || (this.width > 0 && x < this.x)) {
-            this.width = -this.width;
-        }
-    } else {
-        stillFrames++;
-        if (stillFrames > 2) {
-            this.animations.play("stand");
-        }
-    }
-}
 Character.prototype.destroy = function() {
     Phaser.Sprite.prototype.destroy.call(this);
-    this.gun.destroy();
 }
 
 function preload() {
     game.stage.disableVisibilityChange = true;
-    characterSprites.forEach(function(color) {
-        game.load.image(color, "assets/sprites/" + color + "/alien" + color + "_stand.png");
-    });
-    game.load.image("gun", "assets/sprites/raygunPurple.png");
-    game.load.atlasJSONArray("characters", "assets/sprites/characters.png", "assets/sprites/characters.json");
+
+    game.load.atlasJSONArray("tiles", "assets/sprites/tilesheet.png", "assets/sprites/tiles.json")
 
     game.load.image("planetLeft", "assets/sprites/planetLeft.png");
     game.load.image("planetMid", "assets/sprites/planetMid.png");
     game.load.image("planetRight", "assets/sprites/planetRight.png");
+    game.load.image("hitman", "assets/sprites/hitman1_silencer.png");
 }
 
 var gfx;
@@ -173,13 +137,14 @@ function addTile(x, y, name) {
 function addBullets(data) {
     for (var i = 0; i < data.length; i++) {
         if (data[i]) {
-            addBullet(data[i].x, data[i].y, data[i].bulletId, data[i].playerId);
+            addBullet(data[i].x, data[i].y, data[i].rotation, data[i].bulletId, data[i].playerId);
         }
     }
 }
 
-function addBullet(x, y, id, playerId) {
+function addBullet(x, y, rotation, id, playerId) {
     var bullet = game.add.sprite(x, y, "characters", "laser");
+    bullet.angle = rotation;
     allBullets[id] = bullet;
     characters[playerId].bullets.push(bullet);
 }
@@ -187,7 +152,7 @@ function addBullet(x, y, id, playerId) {
 function addPlayers(data) {
     for (var i = 0; i < data.length; i++) {
         if (data[i]) {
-            addCharacter(data[i].color, data[i].x, data[i].y, data[i].id, data[i].right);
+            addCharacter("hitman", data[i].x, data[i].y, data[i].id, data[i].right);
         }
     }
 }

@@ -8,7 +8,7 @@ var socket = io.connect("/mobile");
 
 window.onload = function() {
     setupSocketListeners();
-    setupListeners();
+    setupJoysticks();
 };
 
 var leftId, rightId;
@@ -42,54 +42,85 @@ function setupSocketListeners() {
     });
 }
 
-function setupListeners() {
+function setupJoysticks() {
+    var moveStick = new VirtualJoystick({
+        mouseSupport: true,
+        stationaryBase: true,
+        baseX: window.innerWidth / 4,
+        baseY: 100,
+    });
 
-    var downEvent = "mousedown";
-    var upEvent = "mouseup";
+    moveStick.addEventListener('touchStartValidation', function(event) {
+        var touch = event.changedTouches[0];
+        if (touch.pageX >= window.innerWidth / 2) return false;
+        return true;
+    });
 
-    if ("ontouchstart" in window) {
-        downEvent = "touchstart";
-        upEvent = "touchend";
-    }
+    moveStick.addEventListener("touchStart", function() {
+        moveStickUp = false;
+    });
 
-    $("left").addEventListener(downEvent, left);
-    $("left").addEventListener(upEvent, clearLeft);
-    $("right").addEventListener(downEvent, right);
-    $("right").addEventListener(upEvent, clearRight);
-    $("shoot").onclick = function() {
-        socket.emit("shoot");
-    }
+    moveStick.addEventListener("touchEnd", function() {
+        moveStickUp = true;
+    });
 
-    $("left").addEventListener("touchcancel", clearLeft);
-    $("right").addEventListener("touchcancel", clearRight);
+    var shootStick = new VirtualJoystick({
+        mouseSupport: true,
+        stationaryBase: true,
+        baseX: window.innerWidth / 4 * 3,
+        baseY: 100,
+    });
+
+    shootStick.addEventListener('touchStartValidation', function(event) {
+        var touch = event.changedTouches[0];
+        if (touch.pageX < window.innerWidth / 2) return false;
+        return true;
+    });
+
+    shootStick.addEventListener("touchStart", function() {
+        shootStickUp = false;
+    });
+    shootStick.addEventListener("touchEnd", function() {
+        shootStickUp = true;
+    });
+
+    var moveStickUp = false,
+        shootStickUp = false;
+    setInterval(function() {
+        var mdx = moveStick.deltaX(),
+            mdy = moveStick.deltaY();
+        var sdx = shootStick.deltaX(),
+            sdy = shootStick.deltaY();
+
+        if (moveStickUp) {
+            mdx = 0;
+            mdy = 0;
+        }
+        if (shootStickUp) {
+            sdx = 0;
+            sdy = 0;
+        }
+
+        sendPhoneData(normalize(mdx, 100),
+            normalize(mdy, 100),
+            normalize(sdx, 100),
+            normalize(sdy, 100));
+    }, 1 / 60 * 1000);
+
 }
 
-function clearLeft() {
-    clearInterval(leftId);
+function normalize(mag, limit) {
+    // console.log(Math.min(mag, limit) / limit);
+    return Math.min(mag, limit) / limit;
 }
 
-function clearRight() {
-    clearInterval(rightId);
-}
-
-function left() {
-    leftId = setInterval((function() {
-        sendPhoneData(-1, false);
-    }), 17);
-}
-
-function right() {
-    rightId = setInterval((function() {
-        sendPhoneData(1, false);
-    }), 17);
-}
 
 var lastTime;
 
-function sendPhoneData(x, jump) {
+function sendPhoneData(x, y, sx, sy) {
     var currTime = new Date().getTime();
     // console.log(currTime - lastTime);
     lastTime = currTime;
-    var data = { horizontal: x, jump: jump };
+    var data = { horizontal: x, vertical: y, shootX: sx, shootY: sy };
     socket.emit("phoneData", data);
 }
