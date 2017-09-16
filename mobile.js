@@ -84,8 +84,11 @@ function setupJoysticks() {
         shootStickUp = true;
     });
 
-    var moveStickUp = false,
-        shootStickUp = false;
+    var fireInterval = 1;
+    var framesElapsed = fireInterval * 60;
+
+    var moveStickUp = true,
+        shootStickUp = true;
     setInterval(function() {
         var mdx = moveStick.deltaX(),
             mdy = moveStick.deltaY();
@@ -99,7 +102,15 @@ function setupJoysticks() {
         if (shootStickUp) {
             sdx = 0;
             sdy = 0;
+        } else {
+            if (framesElapsed == fireInterval * 60) {
+                framesElapsed = 0;
+                socket.emit("shoot");
+                console.log("shoot");
+            }
+            framesElapsed++;
         }
+        
 
         sendPhoneData(normalize(mdx, 100),
             normalize(mdy, 100),

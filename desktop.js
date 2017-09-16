@@ -38,16 +38,13 @@ function setupSocketListeners() {
             if (bullets[i] && allBullets[bullets[i].bulletId]) {
                 var id = bullets[i].bulletId;
                 var bullet = bullets[i];
-                if (bullet.right && allBullets[id].width < 0 || !bullet.right && allBullets[id].width > 0) {
-                    allBullets[id].width *= -1;
-                }
                 allBullets[id].x = bullet.x;
                 allBullets[id].y = bullet.y;
             }
         }
     });
     socket.on("newBullet", function(bullet) {
-        characters[bullet.playerId].shoot(bullet.x, bullet.y, bullet.bulletId);
+        characters[bullet.playerId].shoot(bullet.x, bullet.y, bullet.rotation, bullet.bulletId);
     });
     socket.on("newPlayer", function(data) {
         console.log("new player");
@@ -82,7 +79,6 @@ var Character = function(game, x, y, spriteName) {
     this.anchor.setTo(14 / 54, 21 / 43);
     this.width /= 2;
     this.height /= 2;
-    console.log(spriteName);
 }
 
 Character.prototype = Object.create(Phaser.Sprite.prototype);
@@ -92,8 +88,10 @@ Character.prototype.update = function() {
 
 
 };
-Character.prototype.shoot = function(x, y, id) {
-    var bullet = game.add.sprite(x, y, "characters", "laser");
+Character.prototype.shoot = function(x, y, rotation, id) {
+    var bullet = game.add.sprite(x, y, "bullet");
+    bullet.anchor.setTo(0.5, 0.5);
+    bullet.angle = rotation;
     this.bullets.push(bullet);
     allBullets[id] = bullet;
 }
@@ -111,6 +109,7 @@ function preload() {
     game.load.image("planetMid", "assets/sprites/planetMid.png");
     game.load.image("planetRight", "assets/sprites/planetRight.png");
     game.load.image("hitman", "assets/sprites/hitman1_silencer.png");
+    game.load.image("bullet", "assets/sprites/laser.png");
 }
 
 var gfx;
@@ -143,7 +142,8 @@ function addBullets(data) {
 }
 
 function addBullet(x, y, rotation, id, playerId) {
-    var bullet = game.add.sprite(x, y, "characters", "laser");
+    var bullet = game.add.sprite(x, y, "bullet");
+    bullet.anchor.setTo(0.5, 0.5);
     bullet.angle = rotation;
     allBullets[id] = bullet;
     characters[playerId].bullets.push(bullet);

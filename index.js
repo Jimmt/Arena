@@ -95,16 +95,19 @@ io.of("/mobile").on("connection", function(socket) {
 
     socket.on("shoot", function() {
         var player = players[socket.playerData.id];
+        var vx = -Math.cos(player.rotation * Math.PI / 180);
+        var vy = -Math.sin(player.rotation * Math.PI / 180);
         var bullet = {
             player: player,
             playerId: socket.playerData.id,
             bulletId: lastBulletId,
-            x: player.x,
-            y: player.y,
-            vx: 1,
-            vy: 1,
-            rotation: 0
+            x: player.x + vx * 100,
+            y: player.y + vy * 100,
+            vx: vx,
+            vy: vy,
+            rotation: player.rotation + 180
         };
+
         projectiles[lastBulletId] = bullet;
         lastBulletId++;
         io.of("/desktop").to(desktopId).emit("newBullet", bullet);
@@ -121,7 +124,9 @@ io.of("/mobile").on("connection", function(socket) {
         player.x += phoneData.horizontal;
         player.y += phoneData.vertical;
         if (phoneData.shootX == 0 && phoneData.shootY == 0) {
-            player.rotation = 180 + Math.atan2(phoneData.vertical, phoneData.horizontal) * 180 / Math.PI;
+            if (phoneData.vertical != 0 && phoneData.horizontal != 0) {
+                player.rotation = 180 + Math.atan2(phoneData.vertical, phoneData.horizontal) * 180 / Math.PI;
+            }
         } else {
             player.rotation = 180 + Math.atan2(phoneData.shootY, phoneData.shootX) * 180 / Math.PI;
         }
@@ -153,7 +158,7 @@ io.of("/desktop").on("connection", function(socket) {
                 element.y += element.vy;
 
                 players.forEach(function(player) {
-                    if (element.x + bulletWidth > player.x - playerWidth / 2 && element.x < player.x + playerWidth / 2) {
+                    if (element.player != player && element.x + bulletWidth > player.x - playerWidth / 2 && element.x < player.x + playerWidth / 2) {
                         var hitboxY = player.y + playerHeight / 2;
                         var hitboxHeight = playerHeight / 2;
                         if (element.y + bulletHeight > hitboxY && element.y < hitboxY + hitboxHeight) {
