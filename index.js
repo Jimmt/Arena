@@ -105,7 +105,7 @@ io.of("/mobile").on("connection", function(socket) {
             y: player.y + vy * 100,
             vx: vx,
             vy: vy,
-            rotation: player.rotation + 180
+            rotation: player.rotation - 90
         };
 
         projectiles[lastBulletId] = bullet;

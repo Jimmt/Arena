@@ -77,8 +77,6 @@ var tiles = [];
 var Character = function(game, x, y, spriteName) {
     Phaser.Sprite.call(this, game, x, y, spriteName);
     this.anchor.setTo(14 / 54, 21 / 43);
-    this.width /= 2;
-    this.height /= 2;
 }
 
 Character.prototype = Object.create(Phaser.Sprite.prototype);
@@ -109,7 +107,7 @@ function preload() {
     game.load.image("planetMid", "assets/sprites/planetMid.png");
     game.load.image("planetRight", "assets/sprites/planetRight.png");
     game.load.image("hitman", "assets/sprites/hitman1_silencer.png");
-    game.load.image("bullet", "assets/sprites/laser.png");
+    game.load.image("bullet", "assets/sprites/bullet.png");
 }
 
 var gfx;
