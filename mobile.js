@@ -100,29 +100,38 @@ function setupJoysticks() {
             mdy = 0;
         }
         if (shootStickUp) {
+            if (framesElapsed < fireInterval * 60) {
+                framesElapsed++;
+            }
             sdx = 0;
             sdy = 0;
         } else {
             if (framesElapsed == fireInterval * 60) {
                 framesElapsed = 0;
                 socket.emit("shoot");
-                console.log("shoot");
             }
             framesElapsed++;
         }
-        
 
-        sendPhoneData(normalize(mdx, 100),
-            normalize(mdy, 100),
-            normalize(sdx, 100),
-            normalize(sdy, 100));
+        var limit = 100;
+        var scale = 50;
+
+        sendPhoneData(normalize(mdx, limit, scale),
+            normalize(mdy, limit, scale),
+            normalize(sdx, limit, scale),
+            normalize(sdy, limit, scale));
     }, 1 / 60 * 1000);
 
 }
 
-function normalize(mag, limit) {
+function normalize(mag, limit, scale) {
     // console.log(Math.min(mag, limit) / limit);
-    return Math.min(mag, limit) / limit;
+    if (Math.abs(mag) > limit) {
+        return (mag > 0 ? 1 : -1) * limit / scale;
+    } else {
+        return mag / scale;
+    }
+
 }
 
 

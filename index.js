@@ -27,8 +27,6 @@ var tiles = [];
 var lastPlayerId = 0;
 var lastBulletId = 0;
 var desktopId; // switch to array later
-var playerWidth = 128 / 2;
-var playerHeight = 128;
 var bulletWidth = 54,
     bulletHeight = 9;
 var gunHeight = 70;
@@ -66,7 +64,7 @@ function createMapDebug() {
             } else {
                 name = "horizontal";
             }
-            tiles.push({ x: j * tileWidth, y: y, name: name });
+            tiles.push({ x: j * tileWidth, y: y, name: name, width: 32, height: 32 });
         }
     }
     for (var i = 0; i < 2; i++) {
@@ -80,7 +78,7 @@ function createMapDebug() {
             } else {
                 name = "vertical";
             }
-            tiles.push({ x: x, y: j * tileHeight, name: name });
+            tiles.push({ x: x, y: j * tileHeight, name: name, width: 32, height: 32 });
         }
     }
 }
@@ -98,8 +96,12 @@ io.of("/mobile").on("connection", function(socket) {
         id: lastPlayerId,
         x: randomInt(100, 400),
         y: 100,
+        radius: 27,
+        width: 54,
+        height: 43,
         rotation: 0,
         vx: 0,
+        vy: 0,
         socketId: socket.id,
         // color: colors[lastPlayerId % colors.length],
         airTime: 0
@@ -143,6 +145,8 @@ io.of("/mobile").on("connection", function(socket) {
         var player = players[socket.playerData.id];
         player.x += phoneData.horizontal;
         player.y += phoneData.vertical;
+        player.vx = phoneData.horizontal;
+        player.vy = phoneData.vertical;
         if (phoneData.shootX == 0 && phoneData.shootY == 0) {
             if (phoneData.vertical != 0 && phoneData.horizontal != 0) {
                 player.rotation = 180 + Math.atan2(phoneData.vertical, phoneData.horizontal) * 180 / Math.PI;
@@ -193,41 +197,76 @@ io.of("/desktop").on("connection", function(socket) {
                 var gravity = 0;
                 for (var i = 0; i < tiles.length; i++) {
                     var tile = tiles[i];
-                    // falling check
 
-                    if (player.x + playerWidth / 2 >= tile.x && player.x <= tile.x + tileWidth) {
-                        var hitboxY = player.y + playerHeight / 2;
-                        var hitboxHeight = playerHeight / 2;
+                    if (intersects(player, tile)) {
+                        var deltaX = (player.x - player.width / 2) - tile.x;
+                        var deltaY = (player.y - player.height / 2) - tile.y;
 
-                        if (hitboxY + hitboxHeight > tile.y && hitboxY < tile.y + tileHeight) {
-                            var vy = player.airTime * gravity;
-
-                            if (vy > 0) {
-                                player.y = tile.y - playerHeight;
-                            } else if (vy < 0) {
-                                player.y = tile.y - tileHeight;
+                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                            if (deltaX > 0) {
+                                player.x = tile.x + tile.width + player.radius;
+                            } else {
+                                player.x = tile.x - player.radius;
                             }
-
-                            gravity = 0;
-                            player.airTime = 0;
-                        }
-
-                        if (hitboxY + hitboxHeight == tile.y && hitboxY == tile.y + tileHeight) {
-                            var vx = player.vx;
-
-                            if (vx > 0) {
-                                player.x = tile.x - playerWidth / 2;
-                            } else if (vx < 0) {
-                                player.x = tile.x + tileWidth + playerWidth / 2;
+                        } else {
+                            if (deltaY > 0) {
+                                player.y = tile.y + tile.height + player.radius + 1;
+                            } else {
+                                player.y = tile.y - player.radius;
                             }
                         }
                     }
+                    // if (player.x + playerWidth / 2 >= tile.x && player.x <= tile.x + tileWidth) {
+                    //     var hitboxY = player.y + playerHeight / 2;
+                    //     var hitboxHeight = playerHeight / 2;
+
+                    //     if (hitboxY + hitboxHeight > tile.y && hitboxY < tile.y + tileHeight) {
+                    //         var vy = player.airTime * gravity;
+
+                    //         if (vy > 0) {
+                    //             player.y = tile.y - playerHeight;
+                    //         } else if (vy < 0) {
+                    //             player.y = tile.y - tileHeight;
+                    //         }
+
+                    //         gravity = 0;
+                    //         player.airTime = 0;
+                    //     }
+
+                    //     if (hitboxY + hitboxHeight == tile.y && hitboxY == tile.y + tileHeight) {
+                    //         var vx = player.vx;
+
+                    //         if (vx > 0) {
+                    //             player.x = tile.x - playerWidth / 2;
+                    //         } else if (vx < 0) {
+                    //             player.x = tile.x + tileWidth + playerWidth / 2;
+                    //         }
+                    //     }
+                    // }
                 }
                 player.y += gravity * player.airTime;
             });
         });
     });
 });
+
+function intersects(circle, rect) {
+    var centerX = rect.x + rect.width / 2;
+    var centerY = rect.y + rect.height / 2;
+    var circleDistanceX = Math.abs(circle.x - centerX);
+    var circleDistanceY = Math.abs(circle.y - centerY);
+
+    if (circleDistanceX > (rect.width / 2 + circle.radius)) { return false; }
+    if (circleDistanceY > (rect.height / 2 + circle.radius)) { return false; }
+
+    if (circleDistanceX <= (rect.width / 2)) { return true; }
+    if (circleDistanceY <= (rect.height / 2)) { return true; }
+
+    var cornerDistance_sq = Math.pow(circleDistanceX - rect.width / 2, 2) +
+        Math.pow(circleDistanceY - rect.height / 2, 2);
+
+    return (cornerDistance_sq <= (circle.r ^ 2));
+}
 
 function playerHit(socket, bullet, player) {
     delete players[player.id];
