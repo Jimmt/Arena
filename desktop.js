@@ -69,7 +69,7 @@ function setupSocketListeners() {
     });
 }
 
-var game = new Phaser.Game(1200, 675, Phaser.CANVAS, "game", { preload: preload, create: create, update: update, render: render });
+var game = new Phaser.Game(1216, 704, Phaser.CANVAS, "game", { preload: preload, create: create, update: update, render: render });
 var characters = [];
 var allBullets = [];
 var tiles = [];
@@ -103,9 +103,6 @@ function preload() {
 
     game.load.atlasJSONArray("tiles", "assets/sprites/tilesheet.png", "assets/sprites/tiles.json")
 
-    game.load.image("planetLeft", "assets/sprites/planetLeft.png");
-    game.load.image("planetMid", "assets/sprites/planetMid.png");
-    game.load.image("planetRight", "assets/sprites/planetRight.png");
     game.load.image("hitman", "assets/sprites/hitman1_silencer.png");
     game.load.image("bullet", "assets/sprites/bullet.png");
 }
@@ -115,6 +112,8 @@ var gfx;
 function create() {
     gfx = game.add.graphics(0, 0);
     socket.emit("ready");
+    game.stage.scale.pageAlignHorizontally = true;
+    game.stage.scale.refresh();
 }
 
 
@@ -125,9 +124,8 @@ function addTiles(data) {
 }
 
 function addTile(x, y, name) {
-    var element = game.add.sprite(x, y, name);
-    element.width /= 2;
-    element.height /= 2;
+    var element = game.add.sprite(x, y, "tiles", name);
+    element.scale.setTo(0.5, 0.5);
     tiles.push(element);
 }
 

@@ -34,8 +34,8 @@ var bulletWidth = 54,
 var gunHeight = 70;
 var gunWidth = 35;
 var bulletOffset = 136;
-var tileWidth = 64,
-    tileHeight = 64;
+var tileWidth = 32,
+    tileHeight = 32;
 
 function randomInt(low, high) {
     return Math.floor(Math.random() * (high - low) + low);
@@ -52,16 +52,32 @@ function numberOfPlayers() {
 }
 
 function createMapDebug() {
-    var numTiles = 16;
-    for (var i = 0; i < numTiles; i++) {
-        var name = "planetMid";
-        var y = 600;
-        if (i == 0) { name = "planetLeft"; }
-        if (i == numTiles - 1) {
-            name = "planetRight";
-            y = 600 - tileHeight;
+    var numTilesX = 1216 / tileWidth;
+    var numTilesY = 704 / tileHeight;
+
+    for (var i = 0; i < 2; i++) {
+        for (var j = 0; j < numTilesX; j++) {
+            var name = (i == 0) ? "top" : "bottom";
+            var y = (i == 0) ? 0 : 704 - tileHeight;
+            if (j == 0) {
+                name += "left";
+            } else if (j == numTilesX - 1) {
+                name += "right";
+            }
+            tiles.push({ x: j * tileWidth, y: y, name: name });
         }
-        tiles.push({ x: i * tileWidth, y: y, name: name });
+    }
+    for (var i = 0; i < 2; i++) {
+        for (var j = 0; j < numTilesY; j++) {
+            var name = (i == 0) ? "left" : "right";
+            var x = (i == 0) ? 0 : 1216 - tileWidth;
+            if (j == 0) {
+                continue;
+            } else if (j == numTilesY - 1) {
+                break;
+            }
+            tiles.push({ x: x, y: j * tileHeight, name: name });
+        }
     }
 }
 
