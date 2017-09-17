@@ -63,6 +63,8 @@ function createMapDebug() {
                 name += "left";
             } else if (j == numTilesX - 1) {
                 name += "right";
+            } else {
+                name = "horizontal";
             }
             tiles.push({ x: j * tileWidth, y: y, name: name });
         }
@@ -75,6 +77,8 @@ function createMapDebug() {
                 continue;
             } else if (j == numTilesY - 1) {
                 break;
+            } else {
+                name = "vertical";
             }
             tiles.push({ x: x, y: j * tileHeight, name: name });
         }
