@@ -119,12 +119,14 @@ io.of("/mobile").on("connection", function(socket) {
         var player = players[socket.playerData.id];
         var vx = -Math.cos(player.rotation * Math.PI / 180);
         var vy = -Math.sin(player.rotation * Math.PI / 180);
+
         var bullet = {
             player: player,
             playerId: socket.playerData.id,
             bulletId: lastBulletId,
             x: player.x + vx * 100,
             y: player.y + vy * 100,
+            radius: 3,
             vx: vx,
             vy: vy,
             rotation: player.rotation - 90
@@ -142,17 +144,19 @@ io.of("/mobile").on("connection", function(socket) {
     });
     // to send out something
     socket.on("phoneData", function(phoneData) {
-        var player = players[socket.playerData.id];
-        player.x += phoneData.horizontal;
-        player.y += phoneData.vertical;
-        player.vx = phoneData.horizontal;
-        player.vy = phoneData.vertical;
-        if (phoneData.shootX == 0 && phoneData.shootY == 0) {
-            if (phoneData.vertical != 0 && phoneData.horizontal != 0) {
-                player.rotation = 180 + Math.atan2(phoneData.vertical, phoneData.horizontal) * 180 / Math.PI;
+        if (players[socket.playerData.id]) {
+            var player = players[socket.playerData.id];
+            player.x += phoneData.horizontal;
+            player.y += phoneData.vertical;
+            player.vx = phoneData.horizontal;
+            player.vy = phoneData.vertical;
+            if (phoneData.shootX == 0 && phoneData.shootY == 0) {
+                if (phoneData.vertical != 0 && phoneData.horizontal != 0) {
+                    player.rotation = 180 + Math.atan2(phoneData.vertical, phoneData.horizontal) * 180 / Math.PI;
+                }
+            } else {
+                player.rotation = 180 + Math.atan2(phoneData.shootY, phoneData.shootX) * 180 / Math.PI;
             }
-        } else {
-            player.rotation = 180 + Math.atan2(phoneData.shootY, phoneData.shootX) * 180 / Math.PI;
         }
         // io.of("/desktop").to(desktopId).emit("move", socket.player);
     });
@@ -177,17 +181,13 @@ io.of("/desktop").on("connection", function(socket) {
         socket.on("updateRequest", function() {
             socket.emit("update", players);
             socket.emit("bulletUpdate", projectiles);
-            projectiles.forEach(function(element) {
-                element.x += element.vx;
-                element.y += element.vy;
+            projectiles.forEach(function(bullet) {
+                bullet.x += bullet.vx;
+                bullet.y += bullet.vy;
 
                 players.forEach(function(player) {
-                    if (element.player != player && element.x + bulletWidth > player.x - playerWidth / 2 && element.x < player.x + playerWidth / 2) {
-                        var hitboxY = player.y + playerHeight / 2;
-                        var hitboxHeight = playerHeight / 2;
-                        if (element.y + bulletHeight > hitboxY && element.y < hitboxY + hitboxHeight) {
-                            playerHit(socket, element, player);
-                        }
+                    if (ccIntersects(bullet, player)) { //this is circle on circle 
+                        playerHit(socket, bullet, player);
                     }
                 });
             });
@@ -198,7 +198,7 @@ io.of("/desktop").on("connection", function(socket) {
                 for (var i = 0; i < tiles.length; i++) {
                     var tile = tiles[i];
 
-                    if (intersects(player, tile)) {
+                    if (crIntersects(player, tile)) {
                         var deltaX = (player.x - player.width / 2) - tile.x;
                         var deltaY = (player.y - player.height / 2) - tile.y;
 
@@ -250,7 +250,12 @@ io.of("/desktop").on("connection", function(socket) {
     });
 });
 
-function intersects(circle, rect) {
+function ccIntersects(circle1, circle2){
+    var distance = Math.sqrt(Math.pow(circle1.x - circle2.x, 2) + Math.pow(circle1.y - circle2.y, 2));
+    return (distance <= circle1.radius + circle2.radius);
+}
+
+function crIntersects(circle, rect) {
     var centerX = rect.x + rect.width / 2;
     var centerY = rect.y + rect.height / 2;
     var circleDistanceX = Math.abs(circle.x - centerX);

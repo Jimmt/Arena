@@ -44,9 +44,18 @@ function setupSocketListeners() {
 
 function setupJoysticks() {
     var moveStick = new VirtualJoystick({
+        strokeStyle: "black",
         mouseSupport: true,
         stationaryBase: true,
         baseX: window.innerWidth / 4,
+        baseY: 100,
+    });
+
+    var shootStick = new VirtualJoystick({
+        strokeStyle: "black",
+        mouseSupport: true,
+        stationaryBase: true,
+        baseX: window.innerWidth / 4 * 3,
         baseY: 100,
     });
 
@@ -62,13 +71,6 @@ function setupJoysticks() {
 
     moveStick.addEventListener("touchEnd", function() {
         moveStickUp = true;
-    });
-
-    var shootStick = new VirtualJoystick({
-        mouseSupport: true,
-        stationaryBase: true,
-        baseX: window.innerWidth / 4 * 3,
-        baseY: 100,
     });
 
     shootStick.addEventListener('touchStartValidation', function(event) {

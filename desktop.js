@@ -113,7 +113,6 @@ function create() {
     gfx = game.add.graphics(0, 0);
     socket.emit("ready");
     game.stage.scale.pageAlignHorizontally = true;
-    game.stage.scale.refresh();
 }
 
 
