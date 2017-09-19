@@ -102,6 +102,7 @@ io.of("/mobile").on("connection", function(socket) {
         rotation: 0,
         vx: 0,
         vy: 0,
+        color: [randomInt(0, 256), randomInt(0, 256), randomInt(0, 256)],
         socketId: socket.id,
         // color: colors[lastPlayerId % colors.length],
         airTime: 0
