@@ -5,10 +5,10 @@ var $ = function(id) {
 };
 
 var socket = io.connect("/mobile");
+var moveStick, shootStick;
 
 window.onload = function() {
     setupSocketListeners();
-    setupJoysticks();
 };
 
 var leftId, rightId;
@@ -33,8 +33,8 @@ var kills = 0;
 
 function setupSocketListeners() {
     socket.on("playerData", function(player) {
-        $("n").innerHTML = player.color;
-        // document.cookie = "austin_id=" + player.clientId;
+        var color = "rgb(" + player.color + ")";
+        setupJoysticks(color);
     });
     socket.on("killUpdate", function() {
         console.log("+kill");
@@ -42,17 +42,17 @@ function setupSocketListeners() {
     });
 }
 
-function setupJoysticks() {
-    var moveStick = new VirtualJoystick({
-        strokeStyle: "black",
+function setupJoysticks(color) {
+    moveStick = new VirtualJoystick({
+        strokeStyle: color,
         mouseSupport: true,
         stationaryBase: true,
         baseX: window.innerWidth / 4,
         baseY: 100,
     });
 
-    var shootStick = new VirtualJoystick({
-        strokeStyle: "black",
+    shootStick = new VirtualJoystick({
+        strokeStyle: color,
         mouseSupport: true,
         stationaryBase: true,
         baseX: window.innerWidth / 4 * 3,
