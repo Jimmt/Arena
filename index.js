@@ -118,18 +118,21 @@ io.of("/mobile").on("connection", function(socket) {
 
     socket.on("shoot", function() {
         var player = players[socket.playerData.id];
-        var vx = -Math.cos(player.rotation * Math.PI / 180);
-        var vy = -Math.sin(player.rotation * Math.PI / 180);
+        var adjustedAngle = player.rotation - 10;
+        var vx = -Math.cos(adjustedAngle * Math.PI / 180);
+        var vy = -Math.sin(adjustedAngle * Math.PI / 180);
+        var radius = 3;
+        var fireRadius = 40;
 
         var bullet = {
             player: player,
             playerId: socket.playerData.id,
             bulletId: lastBulletId,
-            x: player.x + vx * 100,
-            y: player.y + vy * 100,
-            radius: 3,
-            vx: vx,
-            vy: vy,
+            radius: radius,
+            x: player.x + vx * (fireRadius + radius),
+            y: player.y + vy * (fireRadius + radius),
+            vx: -Math.cos((player.rotation) * Math.PI / 180),
+            vy: -Math.sin((player.rotation) * Math.PI / 180),
             rotation: player.rotation - 90
         };
 
@@ -251,7 +254,7 @@ io.of("/desktop").on("connection", function(socket) {
     });
 });
 
-function ccIntersects(circle1, circle2){
+function ccIntersects(circle1, circle2) {
     var distance = Math.sqrt(Math.pow(circle1.x - circle2.x, 2) + Math.pow(circle1.y - circle2.y, 2));
     return (distance <= circle1.radius + circle2.radius);
 }
