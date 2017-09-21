@@ -119,6 +119,7 @@ io.of("/mobile").on("connection", function(socket) {
     socket.on("shoot", function() {
         var player = players[socket.playerData.id];
         var adjustedAngle = player.rotation - 10;
+        var bulletSpeed = 3;
         var vx = -Math.cos(adjustedAngle * Math.PI / 180);
         var vy = -Math.sin(adjustedAngle * Math.PI / 180);
         var radius = 3;
@@ -131,8 +132,8 @@ io.of("/mobile").on("connection", function(socket) {
             radius: radius,
             x: player.x + vx * (fireRadius + radius),
             y: player.y + vy * (fireRadius + radius),
-            vx: -Math.cos((player.rotation) * Math.PI / 180),
-            vy: -Math.sin((player.rotation) * Math.PI / 180),
+            vx: -Math.cos((player.rotation) * Math.PI / 180) * bulletSpeed,
+            vy: -Math.sin((player.rotation) * Math.PI / 180) * bulletSpeed,
             rotation: player.rotation - 90
         };
 

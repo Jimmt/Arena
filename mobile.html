@@ -6,6 +6,7 @@
     <!-- ver 2.0.3 -->
     <script src="mobile.js"></script>
     <script src="virtualjoystick.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Libre+Barcode+39+Text" rel="stylesheet">
     <style type="text/css">
     div {
         -webkit-touch-callout: none;
@@ -16,19 +17,25 @@
         user-select: none;
     }
 
-    #move, #shoot {
+    #kills {
+        text-align: center;
+        font-size: 40pt;
+        font-family: "Libre Barcode 39 Text", monospace;
+    }
+
+    #move,
+    #shoot {
         width: 47%;
         height: 300px;
         outline: 1px black solid;
-        text-align: center; display: inline-block;
+        text-align: center;
+        display: inline-block;
     }
     </style>
 </head>
 
 <body id="body">
-    <p>MOBILE</p>
-    <div id="n"></div>
-    <div id="kills"></div>
+    <div id="kills">0 Kills</div>
 </body>
 
 </html>

@@ -7,9 +7,7 @@ var $ = function(id) {
 var socket = io.connect("/mobile");
 var moveStick, shootStick;
 
-window.onload = function() {
     setupSocketListeners();
-};
 
 var leftId, rightId;
 
@@ -38,7 +36,7 @@ function setupSocketListeners() {
     });
     socket.on("killUpdate", function() {
         console.log("+kill");
-        $("kills").innerHTML = "kills" + ++kills;
+        $("kills").innerHTML = ++kills + ((kills == 1) ? " kill" : " kills");
     });
 }
 
