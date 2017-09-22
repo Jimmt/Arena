@@ -72,7 +72,7 @@ function setupSocketListeners() {
     });
 }
 
-var game = new Phaser.Game(1216, 704, Phaser.CANVAS, "game", { preload: preload, create: create, update: update, render: render });
+var game = new Phaser.Game(1216, 704, Phaser.CANVAS, "phaser-container", { preload: preload, create: create, update: update, render: render });
 var characters = [];
 var allBullets = [];
 var tiles = [];
@@ -182,6 +182,7 @@ function removeBullet(id) {
 }
 
 function update() {
+    $("game-id").innerHTML = "Game ID: " + getGameId();
     socket.emit("updateRequest");
 }
 

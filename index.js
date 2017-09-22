@@ -110,6 +110,7 @@ io.of("/mobile").on("connection", function(socket) {
             vx: 0,
             vy: 0,
             color: [randomInt(0, 256), randomInt(0, 256), randomInt(0, 256)],
+            kills: 0,
             socketId: socket.id,
             // color: colors[lastPlayerId % colors.length],
             airTime: 0
@@ -186,7 +187,7 @@ io.of("/desktop").on("connection", function(socket) {
 
     socket.on("ready", function(data) {
         console.log(data);
-        
+
         var gameId;
         if (data.gameId == "") {
             gameId = generateGameId();
@@ -282,7 +283,18 @@ io.of("/desktop").on("connection", function(socket) {
 });
 
 function generateGameId() {
-    return randomInt(0, 100);
+    var letters = "0123456789abcdefghijklmnopqrstuvwxyz";
+    var id = "";
+    while (true) {
+        for (var i = 0; i < 5; i++) {
+            id += letters.charAt(randomInt(0, letters.length));
+        }
+        if(!desktops[id]){
+            break;
+        }
+    }
+    console.log(id);
+    return id;
 }
 
 function ccIntersects(circle1, circle2) {
