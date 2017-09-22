@@ -4,34 +4,26 @@ var $ = function(id) {
     return document.getElementById(id);
 };
 
-var socket = io.connect("/mobile");
 var moveStick, shootStick;
 
+
+var socket = io.connect("/mobile");
+window.onload = function() {
     setupSocketListeners();
-
-var leftId, rightId;
-
-function getCookie(cname) {
-    var name = cname + "=";
-    var decodedCookie = decodeURIComponent(document.cookie);
-    var ca = decodedCookie.split(';');
-    for (var i = 0; i < ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0) == ' ') {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
-        }
-    }
-    return "";
 }
 
 var kills = 0;
 
 function setupSocketListeners() {
+    $("join").onclick = function() {
+        socket.emit("ready", $("id-input").value);
+    };
+    socket.on("errorNoSuchGame", function(){
+        $("error-text").innerHTML = "No game with id " + $("id-input").value + " exists";
+    });
     socket.on("playerData", function(player) {
         var color = "rgb(" + player.color + ")";
+        $("error-text").innerHTML = "";
         setupJoysticks(color);
     });
     socket.on("killUpdate", function() {
@@ -41,25 +33,33 @@ function setupSocketListeners() {
 }
 
 function setupJoysticks(color) {
+    var kills = document.createElement("div");
+    kills.innerHTML = "0 kills";
+    kills.id = "kills";
+    document.body.appendChild(kills);
+
     moveStick = new VirtualJoystick({
+        container: $("joystick-container"),
         strokeStyle: color,
         mouseSupport: true,
         stationaryBase: true,
         baseX: window.innerWidth / 4,
-        baseY: 100,
+        baseY: window.innerHeight / 2,
     });
 
     shootStick = new VirtualJoystick({
+        container: $("joystick-container"),
         strokeStyle: color,
         mouseSupport: true,
         stationaryBase: true,
         baseX: window.innerWidth / 4 * 3,
-        baseY: 100,
+        baseY: window.innerHeight / 2,
     });
 
     moveStick.addEventListener('touchStartValidation', function(event) {
         var touch = event.changedTouches[0];
         if (touch.pageX >= window.innerWidth / 2) return false;
+        if (touch.pageY <= 100) return false;
         return true;
     });
 
@@ -74,6 +74,7 @@ function setupJoysticks(color) {
     shootStick.addEventListener('touchStartValidation', function(event) {
         var touch = event.changedTouches[0];
         if (touch.pageX < window.innerWidth / 2) return false;
+        if (touch.pageY <= 100) return false;
         return true;
     });
 

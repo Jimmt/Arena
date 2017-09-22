@@ -10,11 +10,14 @@ window.onload = function() {
     setupSocketListeners();
 }
 
+function getGameId() {
+    return document.cookie.split("=")[1];
+}
+
 function setupSocketListeners() {
-    // socket.on("move", function(player) {
-    //     characters[player.id].x = player.x;
-    //     characters[player.id].y = player.y;
-    // });
+    socket.on("gameId", function(gameId) {
+        document.cookie = "gameId=" + gameId;
+    });
     socket.on("update", function(players) {
         for (var i = 0; i < players.length; i++) {
             if (players[i] && characters[players[i].id]) {
@@ -119,7 +122,7 @@ var gfx;
 
 function create() {
     gfx = game.add.graphics(0, 0);
-    socket.emit("ready");
+    socket.emit("ready", { gameId: getGameId() });
     game.stage.scale.pageAlignHorizontally = true;
 }
 
@@ -179,21 +182,7 @@ function removeBullet(id) {
 }
 
 function update() {
-    // console.log(characters[0].gun.y); //343
     socket.emit("updateRequest");
-
-    // characters.forEach(function(character){
-    //     gfx.beginFill(0xFF0000, 1);
-    //     gfx.drawCircle(character.x, character.y, 5);
-    // });
-    // allBullets.forEach(function(character){
-    //     gfx.beginFill(0xFF0000, 1);
-    //     gfx.drawCircle(character.x, character.y, 5);
-    // });
-    // tiles.forEach(function(character){
-    //     gfx.beginFill(0xFF0000, 1);
-    //     gfx.drawCircle(character.x, character.y, 5);
-    // });
 }
 
 function render() {}

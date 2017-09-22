@@ -21,12 +21,12 @@ app.get("/mobile", function(req, res) {
     res.sendFile(__dirname + "/mobile.html");
 });
 
+var desktops = [];
 var players = [];
 var projectiles = [];
 var tiles = [];
 var lastPlayerId = 0;
 var lastBulletId = 0;
-var desktopId; // switch to array later
 var bulletWidth = 54,
     bulletHeight = 9;
 var gunHeight = 70;
@@ -87,92 +87,116 @@ createMapDebug();
 
 io.of("/mobile").on("connection", function(socket) {
     console.log("a phone connected");
-    console.log("creating new player");
 
-    socket.playerData = {
-        id: lastPlayerId
-    };
-    var player = {
-        id: lastPlayerId,
-        x: randomInt(100, 400),
-        y: 100,
-        radius: 27,
-        width: 54,
-        height: 43,
-        rotation: 0,
-        vx: 0,
-        vy: 0,
-        color: [randomInt(0, 256), randomInt(0, 256), randomInt(0, 256)],
-        socketId: socket.id,
-        // color: colors[lastPlayerId % colors.length],
-        airTime: 0
-    };
-    players[lastPlayerId] = player;
-
-    lastPlayerId++;
-
-    // io.of("/desktop").to(desktops[0]).emit("allPlayers", getAllPlayers());
-
-    socket.emit("playerData", player);
-    io.of("/desktop").to(desktopId).emit("newPlayer", player);
-
-    socket.on("shoot", function() {
-        var player = players[socket.playerData.id];
-        var adjustedAngle = player.rotation - 10;
-        var bulletSpeed = 3;
-        var vx = -Math.cos(adjustedAngle * Math.PI / 180);
-        var vy = -Math.sin(adjustedAngle * Math.PI / 180);
-        var radius = 3;
-        var fireRadius = 40;
-
-        var bullet = {
-            player: player,
-            playerId: socket.playerData.id,
-            bulletId: lastBulletId,
-            radius: radius,
-            x: player.x + vx * (fireRadius + radius),
-            y: player.y + vy * (fireRadius + radius),
-            vx: -Math.cos((player.rotation) * Math.PI / 180) * bulletSpeed,
-            vy: -Math.sin((player.rotation) * Math.PI / 180) * bulletSpeed,
-            rotation: player.rotation - 90
-        };
-
-        projectiles[lastBulletId] = bullet;
-        lastBulletId++;
-        io.of("/desktop").to(desktopId).emit("newBullet", bullet);
-    });
-
-    socket.on("disconnect", function() {
-        console.log("a phone disconnected");
-        delete players[socket.playerData.id];
-        io.of("/desktop").to(desktopId).emit("remove", socket.playerData.id);
-    });
-    // to send out something
-    socket.on("phoneData", function(phoneData) {
-        if (players[socket.playerData.id]) {
-            var player = players[socket.playerData.id];
-            player.x += phoneData.horizontal;
-            player.y += phoneData.vertical;
-            player.vx = phoneData.horizontal;
-            player.vy = phoneData.vertical;
-            if (phoneData.shootX == 0 && phoneData.shootY == 0) {
-                if (phoneData.vertical != 0 && phoneData.horizontal != 0) {
-                    player.rotation = 180 + Math.atan2(phoneData.vertical, phoneData.horizontal) * 180 / Math.PI;
-                }
-            } else {
-                player.rotation = 180 + Math.atan2(phoneData.shootY, phoneData.shootX) * 180 / Math.PI;
-            }
+    socket.on("ready", function(gameId) {
+        if (!desktops[gameId]) {
+            socket.emit("errorNoSuchGame");
+            return;
         }
-        // io.of("/desktop").to(desktopId).emit("move", socket.player);
+
+        console.log("creating new player");
+
+        socket.playerData = {
+            id: lastPlayerId
+        };
+        var player = {
+            id: lastPlayerId,
+            x: randomInt(100, 400),
+            y: 100,
+            radius: 27,
+            width: 54,
+            height: 43,
+            rotation: 0,
+            vx: 0,
+            vy: 0,
+            color: [randomInt(0, 256), randomInt(0, 256), randomInt(0, 256)],
+            socketId: socket.id,
+            // color: colors[lastPlayerId % colors.length],
+            airTime: 0
+        };
+        players[lastPlayerId] = player;
+
+        lastPlayerId++;
+
+        // io.of("/desktop").to(desktops[0]).emit("allPlayers", getAllPlayers());
+
+        socket.emit("playerData", player);
+        io.of("/desktop").to(desktops[gameId].socketId).emit("newPlayer", player);
+
+        socket.on("shoot", function() {
+            if (!desktops[gameId]) {
+                socket.emit("errorNoSuchGame");
+                return;
+            }
+
+            var player = players[socket.playerData.id];
+            var adjustedAngle = player.rotation - 10;
+            var bulletSpeed = 3;
+            var vx = -Math.cos(adjustedAngle * Math.PI / 180);
+            var vy = -Math.sin(adjustedAngle * Math.PI / 180);
+            var radius = 3;
+            var fireRadius = 40;
+
+            var bullet = {
+                player: player,
+                playerId: socket.playerData.id,
+                bulletId: lastBulletId,
+                radius: radius,
+                x: player.x + vx * (fireRadius + radius),
+                y: player.y + vy * (fireRadius + radius),
+                vx: -Math.cos((player.rotation) * Math.PI / 180) * bulletSpeed,
+                vy: -Math.sin((player.rotation) * Math.PI / 180) * bulletSpeed,
+                rotation: player.rotation - 90
+            };
+
+            projectiles[lastBulletId] = bullet;
+            lastBulletId++;
+            io.of("/desktop").to(desktops[gameId].socketId).emit("newBullet", bullet);
+        });
+
+        socket.on("disconnect", function() {
+            console.log("a phone disconnected");
+            delete players[socket.playerData.id];
+            io.of("/desktop").to(desktops[gameId].socketId).emit("remove", socket.playerData.id);
+        });
+        // to send out something
+        socket.on("phoneData", function(phoneData) {
+            if (players[socket.playerData.id]) {
+                var player = players[socket.playerData.id];
+                player.x += phoneData.horizontal;
+                player.y += phoneData.vertical;
+                player.vx = phoneData.horizontal;
+                player.vy = phoneData.vertical;
+                if (phoneData.shootX == 0 && phoneData.shootY == 0) {
+                    if (phoneData.vertical != 0 && phoneData.horizontal != 0) {
+                        player.rotation = 180 + Math.atan2(phoneData.vertical, phoneData.horizontal) * 180 / Math.PI;
+                    }
+                } else {
+                    player.rotation = 180 + Math.atan2(phoneData.shootY, phoneData.shootX) * 180 / Math.PI;
+                }
+            }
+            // io.of("/desktop").to(desktops[0].id).emit("move", socket.player);
+        });
     });
 });
 
 
 io.of("/desktop").on("connection", function(socket) {
     console.log("a desktop connected");
-    desktopId = socket.id;
 
-    socket.on("ready", function() {
+    socket.on("ready", function(data) {
+        console.log(data);
+        
+        var gameId;
+        if (data.gameId == "") {
+            gameId = generateGameId();
+
+            socket.emit("gameId", gameId);
+        } else {
+            gameId = data.gameId;
+        }
+        desktops[gameId] = { socketId: socket.id };
+
         socket.emit("allPlayers", players);
         socket.emit("allBullets", projectiles);
 
@@ -181,6 +205,8 @@ io.of("/desktop").on("connection", function(socket) {
         socket.on("disconnect", function() {
             // should remove from desktops
             console.log("a desktop disconnected");
+            var index = desktops.indexOf(socket.id);
+            desktops.splice(index, 1);
         });
 
         socket.on("updateRequest", function() {
@@ -254,6 +280,10 @@ io.of("/desktop").on("connection", function(socket) {
         });
     });
 });
+
+function generateGameId() {
+    return randomInt(0, 100);
+}
 
 function ccIntersects(circle1, circle2) {
     var distance = Math.sqrt(Math.pow(circle1.x - circle2.x, 2) + Math.pow(circle1.y - circle2.y, 2));

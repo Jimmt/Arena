@@ -23,6 +23,15 @@
         font-family: "Libre Barcode 39 Text", monospace;
     }
 
+    #error-text {
+        color: red;
+        margin-left: 15px;
+    }
+
+    #joystick-container {
+
+    }
+
     #move,
     #shoot {
         width: 47%;
@@ -35,7 +44,12 @@
 </head>
 
 <body id="body">
-    <div id="kills">0 Kills</div>
+    <div>
+        <input id="id-input" type="text" value="Game id">
+        <button id="join">Join</button>
+        <span id="error-text"></span>
+    </div>
+    <div id="joystick-container"></div>
 </body>
 
 </html>
