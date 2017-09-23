@@ -22,12 +22,15 @@ function setupSocketListeners() {
             socket.emit("gameSwitch");
             clearInterval(timerId);
             var canvases = document.querySelectorAll("canvas");
-            canvases.forEach(function(canvas){
+            canvases.forEach(function(canvas) {
                 $("joystick-container").removeChild(canvas);
             });
         }
-        socket.emit("ready", $("id-input").value);
+        socket.emit("ready", { gameId: $("id-input").value, switching: inGame });
     };
+    socket.on("disconnect", function() {
+        clearInterval(timerId);
+    });
     socket.on("errorNoSuchGame", function() {
         $("error-text").innerHTML = "No game with id " + $("id-input").value + " exists";
     });
@@ -103,6 +106,7 @@ function setupJoysticks(color) {
 
     var moveStickUp = true,
         shootStickUp = true;
+
     timerId = setInterval(function() {
         var mdx = moveStick.deltaX(),
             mdy = moveStick.deltaY();
@@ -147,7 +151,6 @@ function normalize(mag, limit, scale) {
     }
 
 }
-
 
 var lastTime;
 

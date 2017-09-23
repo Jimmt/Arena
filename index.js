@@ -88,7 +88,9 @@ createMapDebug();
 io.of("/mobile").on("connection", function(socket) {
     console.log("a phone connected");
 
-    socket.on("ready", function(gameId) {
+    socket.on("ready", function(data) {
+        var gameId = data.gameId;
+
         if (!desktops[gameId]) {
             socket.emit("errorNoSuchGame");
             return;
@@ -99,6 +101,7 @@ io.of("/mobile").on("connection", function(socket) {
         socket.playerData = {
             id: lastPlayerId
         };
+
         var player = {
             id: lastPlayerId,
             x: randomInt(100, 400),
@@ -127,6 +130,7 @@ io.of("/mobile").on("connection", function(socket) {
         socket.on("gameSwitch", function() {
             delete players[socket.playerData.id];
             io.of("/desktop").to(desktops[gameId].socketId).emit("remove", socket.playerData.id);
+            console.log("gs " + socket.id);
         });
 
         socket.on("shoot", function() {
@@ -167,7 +171,7 @@ io.of("/mobile").on("connection", function(socket) {
         });
 
         socket.on("phoneData", function(phoneData) {
-            if (players[socket.playerData.id]) {
+            if (!data.switching && socket.playerData && players[socket.playerData.id]) {
                 var player = players[socket.playerData.id];
                 player.x += phoneData.horizontal;
                 player.y += phoneData.vertical;
