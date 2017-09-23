@@ -8,6 +8,9 @@ var socket = io.connect("/desktop");
 
 window.onload = function() {
     setupSocketListeners();
+    if(!document.cookie){
+        document.cookie = "gameId=";
+    }
 }
 
 function getGameId() {

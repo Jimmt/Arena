@@ -13,15 +13,20 @@ window.onload = function() {
 }
 
 var kills = 0;
+var inGame = false;
 
 function setupSocketListeners() {
     $("join").onclick = function() {
+        if (inGame) {
+            socket.emit("gameSwitch");
+        }
         socket.emit("ready", $("id-input").value);
     };
-    socket.on("errorNoSuchGame", function(){
+    socket.on("errorNoSuchGame", function() {
         $("error-text").innerHTML = "No game with id " + $("id-input").value + " exists";
     });
     socket.on("playerData", function(player) {
+        inGame = true;
         var color = "rgb(" + player.color + ")";
         $("error-text").innerHTML = "";
         setupJoysticks(color);

@@ -124,6 +124,10 @@ io.of("/mobile").on("connection", function(socket) {
         socket.emit("playerData", player);
         io.of("/desktop").to(desktops[gameId].socketId).emit("newPlayer", player);
 
+        socket.on("gameSwitch", function(){
+            io.of("/desktop").to(desktops[gameId].socketId).emit("remove", socket.playerData.id);
+        });
+
         socket.on("shoot", function() {
             if (!desktops[gameId]) {
                 socket.emit("errorNoSuchGame");
@@ -186,7 +190,6 @@ io.of("/desktop").on("connection", function(socket) {
     console.log("a desktop connected");
 
     socket.on("ready", function(data) {
-        console.log(data);
 
         var gameId;
         if (data.gameId == "") {
@@ -197,6 +200,10 @@ io.of("/desktop").on("connection", function(socket) {
             gameId = data.gameId;
         }
         desktops[gameId] = { socketId: socket.id };
+
+        for (var obj in desktops) {
+            console.log(obj);
+        }
 
         socket.emit("allPlayers", players);
         socket.emit("allBullets", projectiles);
@@ -289,7 +296,7 @@ function generateGameId() {
         for (var i = 0; i < 5; i++) {
             id += letters.charAt(randomInt(0, letters.length));
         }
-        if(!desktops[id]){
+        if (!desktops[id]) {
             break;
         }
     }
