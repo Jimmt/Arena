@@ -14,11 +14,17 @@ window.onload = function() {
 
 var kills = 0;
 var inGame = false;
+var timerId;
 
 function setupSocketListeners() {
     $("join").onclick = function() {
         if (inGame) {
             socket.emit("gameSwitch");
+            clearInterval(timerId);
+            var canvases = document.querySelectorAll("canvas");
+            canvases.forEach(function(canvas){
+                $("joystick-container").removeChild(canvas);
+            });
         }
         socket.emit("ready", $("id-input").value);
     };
@@ -38,10 +44,12 @@ function setupSocketListeners() {
 }
 
 function setupJoysticks(color) {
-    var kills = document.createElement("div");
-    kills.innerHTML = "0 kills";
-    kills.id = "kills";
-    document.body.appendChild(kills);
+    if (!$("kills")) {
+        var kills = document.createElement("div");
+        kills.id = "kills";
+        document.body.appendChild(kills);
+    }
+    $("kills").innerHTML = "0 kills";
 
     moveStick = new VirtualJoystick({
         container: $("joystick-container"),
@@ -95,7 +103,7 @@ function setupJoysticks(color) {
 
     var moveStickUp = true,
         shootStickUp = true;
-    setInterval(function() {
+    timerId = setInterval(function() {
         var mdx = moveStick.deltaX(),
             mdy = moveStick.deltaY();
         var sdx = shootStick.deltaX(),

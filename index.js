@@ -124,7 +124,8 @@ io.of("/mobile").on("connection", function(socket) {
         socket.emit("playerData", player);
         io.of("/desktop").to(desktops[gameId].socketId).emit("newPlayer", player);
 
-        socket.on("gameSwitch", function(){
+        socket.on("gameSwitch", function() {
+            delete players[socket.playerData.id];
             io.of("/desktop").to(desktops[gameId].socketId).emit("remove", socket.playerData.id);
         });
 
@@ -164,7 +165,7 @@ io.of("/mobile").on("connection", function(socket) {
             delete players[socket.playerData.id];
             io.of("/desktop").to(desktops[gameId].socketId).emit("remove", socket.playerData.id);
         });
-        // to send out something
+
         socket.on("phoneData", function(phoneData) {
             if (players[socket.playerData.id]) {
                 var player = players[socket.playerData.id];
@@ -230,7 +231,6 @@ io.of("/desktop").on("connection", function(socket) {
                     }
                 });
             });
-
             players.forEach(function(player) {
                 player.airTime += 1 / 60;
                 var gravity = 0;
