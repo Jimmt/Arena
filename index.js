@@ -339,6 +339,6 @@ function playerHit(socket, bullet, player) {
     io.of("/mobile").to(bullet.player.socketId).emit("killUpdate");
 }
 
-server.listen(5000, function() {
+server.listen(process.env.PORT || 5000, function() {
     console.log("listening on 5000");
 });
